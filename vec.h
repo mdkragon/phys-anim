@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <cmath>
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <stdio.h>
 #endif
 

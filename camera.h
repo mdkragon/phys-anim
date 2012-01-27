@@ -3,7 +3,7 @@
 #ifndef camera_H_
 #define camera_H_
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #ifdef LINUX
