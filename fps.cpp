@@ -9,7 +9,7 @@
 #include "fps.h"
 #include "clock.h"
 
-#ifdef LINUX
+#ifndef WIN32
 #include <string.h>
 #endif
 

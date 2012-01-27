@@ -6,8 +6,13 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#include <OpenGL/gl.h>
+#else
 #include <GL/glut.h>
 #include <GL/gl.h>
+#endif
 
 #include "camera.h"
 

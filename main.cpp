@@ -2,7 +2,11 @@
 #include <math.h>
 #include "camera.h"
 #include "fps.h"
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 #include <IL/il.h>
 #include <IL/ilu.h>
 #include <IL/ilut.h>
@@ -64,7 +68,7 @@ void grabScreen()
     }
 
     char anim_filename[2048];
-#ifdef LINUX
+#ifndef WIN32
     sprintf(anim_filename, "output/%04d.png", theFrameNum++); 
 #else
     sprintf_s(anim_filename, 2048, "output/%04d.png", theFrameNum++); 
