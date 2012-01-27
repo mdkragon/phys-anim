@@ -64,7 +64,11 @@ void grabScreen()
     }
 
     char anim_filename[2048];
+#ifdef LINUX
+    sprintf(anim_filename, "output/%04d.png", theFrameNum++); 
+#else
     sprintf_s(anim_filename, 2048, "output/%04d.png", theFrameNum++); 
+#endif
 
     ilSave(IL_PNG, anim_filename);
 

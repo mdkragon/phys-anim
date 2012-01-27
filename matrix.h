@@ -1109,10 +1109,10 @@ matrixT::IsLowerTriangular () _NO_THROW
 MAT_TEMPLATE inline
 TranslationMatrix<T>::TranslationMatrix (T x, T y, T z) : matrixT(4, 4)
 {
-  _m->Val[0][0] = T(1); _m->Val[0][1] = T(0); _m->Val[0][2] = T(0); _m->Val[0][3] = x;
-  _m->Val[1][0] = T(0); _m->Val[1][1] = T(1); _m->Val[1][2] = T(0); _m->Val[1][3] = y;
-  _m->Val[2][0] = T(0); _m->Val[2][1] = T(0); _m->Val[2][2] = T(1); _m->Val[2][3] = z;
-  _m->Val[3][0] = T(0); _m->Val[3][1] = T(0); _m->Val[3][2] = T(0); _m->Val[3][3] = T(1);
+  this->_m->Val[0][0] = T(1); this->_m->Val[0][1] = T(0); this->_m->Val[0][2] = T(0); this->_m->Val[0][3] = x;
+  this->_m->Val[1][0] = T(0); this->_m->Val[1][1] = T(1); this->_m->Val[1][2] = T(0); this->_m->Val[1][3] = y;
+  this->_m->Val[2][0] = T(0); this->_m->Val[2][1] = T(0); this->_m->Val[2][2] = T(1); this->_m->Val[2][3] = z;
+  this->_m->Val[3][0] = T(0); this->_m->Val[3][1] = T(0); this->_m->Val[3][2] = T(0); this->_m->Val[3][3] = T(1);
 }
 
 MAT_TEMPLATE inline
@@ -1120,34 +1120,34 @@ RotationMatrix<T>::RotationMatrix (int axis, double angle) : matrixT(4, 4)
 {
   if (axis == 0)  // X
   {
-      _m->Val[0][0] = 1;           _m->Val[0][1] = 0;          _m->Val[0][2] =  0;          _m->Val[0][3] = 0;
-      _m->Val[1][0] = 0;           _m->Val[1][1] = cos(angle); _m->Val[1][2] = -sin(angle); _m->Val[1][3] = 0;
-      _m->Val[2][0] = 0;           _m->Val[2][1] = sin(angle); _m->Val[2][2] = cos(angle);  _m->Val[2][3] = 0;
-      _m->Val[3][0] = 0;           _m->Val[3][1] = 0;          _m->Val[3][2] = 0;           _m->Val[3][3] = 1;
+      this->_m->Val[0][0] = 1;           this->_m->Val[0][1] = 0;          this->_m->Val[0][2] =  0;          this->_m->Val[0][3] = 0;
+      this->_m->Val[1][0] = 0;           this->_m->Val[1][1] = cos(angle); this->_m->Val[1][2] = -sin(angle); this->_m->Val[1][3] = 0;
+      this->_m->Val[2][0] = 0;           this->_m->Val[2][1] = sin(angle); this->_m->Val[2][2] = cos(angle);  this->_m->Val[2][3] = 0;
+      this->_m->Val[3][0] = 0;           this->_m->Val[3][1] = 0;          this->_m->Val[3][2] = 0;           this->_m->Val[3][3] = 1;
   }
   else if (axis == 1)  // Y
   {
-      _m->Val[0][0] = cos(angle);  _m->Val[0][1] = 0;           _m->Val[0][2] =  sin(angle); _m->Val[0][3] = 0;
-      _m->Val[1][0] = 0;           _m->Val[1][1] = 1;           _m->Val[1][2] = 0;           _m->Val[1][3] = 0;
-      _m->Val[2][0] = -sin(angle); _m->Val[2][1] = 0;           _m->Val[2][2] = cos(angle);  _m->Val[2][3] = 0;
-      _m->Val[3][0] = 0;           _m->Val[3][1] = 0;           _m->Val[3][2] = 0;           _m->Val[3][3] = 1;
+      this->_m->Val[0][0] = cos(angle);  this->_m->Val[0][1] = 0;           this->_m->Val[0][2] =  sin(angle); this->_m->Val[0][3] = 0;
+      this->_m->Val[1][0] = 0;           this->_m->Val[1][1] = 1;           this->_m->Val[1][2] = 0;           this->_m->Val[1][3] = 0;
+      this->_m->Val[2][0] = -sin(angle); this->_m->Val[2][1] = 0;           this->_m->Val[2][2] = cos(angle);  this->_m->Val[2][3] = 0;
+      this->_m->Val[3][0] = 0;           this->_m->Val[3][1] = 0;           this->_m->Val[3][2] = 0;           this->_m->Val[3][3] = 1;
   }
   else if (axis == 2) // Z
   {
-      _m->Val[0][0] = cos(angle); _m->Val[0][1] = -sin(angle); _m->Val[0][2] = 0;            _m->Val[0][3] = 0;
-      _m->Val[1][0] = sin(angle); _m->Val[1][1] = cos(angle);  _m->Val[1][2] = 0;            _m->Val[1][3] = 0;
-      _m->Val[2][0] = 0;          _m->Val[2][1] = 0;           _m->Val[2][2] = 1;            _m->Val[2][3] = 0;
-      _m->Val[3][0] = 0;          _m->Val[3][1] = 0;           _m->Val[3][2] = 0;            _m->Val[3][3] = 1;
+      this->_m->Val[0][0] = cos(angle); this->_m->Val[0][1] = -sin(angle); this->_m->Val[0][2] = 0;            this->_m->Val[0][3] = 0;
+      this->_m->Val[1][0] = sin(angle); this->_m->Val[1][1] = cos(angle);  this->_m->Val[1][2] = 0;            this->_m->Val[1][3] = 0;
+      this->_m->Val[2][0] = 0;          this->_m->Val[2][1] = 0;           this->_m->Val[2][2] = 1;            this->_m->Val[2][3] = 0;
+      this->_m->Val[3][0] = 0;          this->_m->Val[3][1] = 0;           this->_m->Val[3][2] = 0;            this->_m->Val[3][3] = 1;
   }
 }
 
 MAT_TEMPLATE inline
 ScaleMatrix<T>::ScaleMatrix (T x, T y, T z) : matrixT(4, 4)
 {
-  _m->Val[0][0] = x;    _m->Val[0][1] = T(0); _m->Val[0][2] = T(0); _m->Val[0][3] = T(0);
-  _m->Val[1][0] = T(0); _m->Val[1][1] = y;    _m->Val[1][2] = T(0); _m->Val[1][3] = T(0);
-  _m->Val[2][0] = T(0); _m->Val[2][1] = T(0); _m->Val[2][2] = z;    _m->Val[2][3] = T(0);
-  _m->Val[3][0] = T(0); _m->Val[3][1] = T(0); _m->Val[3][2] = T(0); _m->Val[3][3] = T(1);
+  this->_m->Val[0][0] = x;    this->_m->Val[0][1] = T(0); this->_m->Val[0][2] = T(0); this->_m->Val[0][3] = T(0);
+  this->_m->Val[1][0] = T(0); this->_m->Val[1][1] = y;    this->_m->Val[1][2] = T(0); this->_m->Val[1][3] = T(0);
+  this->_m->Val[2][0] = T(0); this->_m->Val[2][1] = T(0); this->_m->Val[2][2] = z;    this->_m->Val[2][3] = T(0);
+  this->_m->Val[3][0] = T(0); this->_m->Val[3][1] = T(0); this->_m->Val[3][2] = T(0); this->_m->Val[3][3] = T(1);
 }
 
 MAT_TEMPLATE inline vec3 operator* (const matrixT& m, const vec3& v) _THROW_MATRIX_ERROR // transform point

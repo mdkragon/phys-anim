@@ -29,6 +29,10 @@
 #include <assert.h>
 #include <cmath>
 
+#ifdef LINUX
+#include <stdio.h>
+#endif
+
 using namespace std;
 
 enum {VX, VY, VZ, VW};		    // axes
@@ -42,7 +46,9 @@ enum {KA, KD, KS, ES};		    // phong coefficients
 #ifndef M_PI
 const double M_PI = 3.14159265358979323846f;		// per CRC handbook, 14th. ed.
 #endif
+#ifndef M_PI_2
 const double M_PI_2 = double(M_PI/2.0f);				// PI/2
+#endif
 const double M2_PI = double(M_PI*2.0f);				// PI*2
 const double Rad2Deg = double(180.0f / M_PI);			// Rad to Degree
 const double Deg2Rad = double(M_PI / 180.0f);			// Degree to Rad
@@ -92,7 +98,11 @@ public:
 	vec2& operator *= ( const double d );	// multiplication by a constant
 	vec2& operator /= ( const double d );	// division by a constant
 	double& operator [] ( int i);			// indexing
+#ifdef LINUX
+	double operator [] ( int i) const;// read-only indexing
+#else
 	double vec2::operator [] ( int i) const;// read-only indexing
+#endif
 
 	// Special functions
 	double Length() const;			// length of a vec2

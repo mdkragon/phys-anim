@@ -9,6 +9,12 @@
 #ifndef __MMC_FPS_H__
 #define __MMC_FPS_H__
 
+#ifdef LINUX
+// unmap the max macro defined in matrix.h
+// it will break the stl headers
+#undef max
+#endif
+
 #include <vector>
 
 namespace mmc

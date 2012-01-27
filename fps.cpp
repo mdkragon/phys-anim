@@ -9,6 +9,11 @@
 #include "fps.h"
 #include "clock.h"
 
+#ifdef LINUX
+#include <string.h>
+#endif
+
+
 using namespace mmc;
 
 FpsTracker::FpsTracker (int smoothSteps)

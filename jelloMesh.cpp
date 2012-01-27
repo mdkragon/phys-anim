@@ -1,4 +1,4 @@
-#include "JelloMesh.h"
+#include "jelloMesh.h"
 #include <GL/glut.h>
 #include <algorithm>
 

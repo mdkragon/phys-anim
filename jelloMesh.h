@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include "vec.h"
-#include "World.h"
+#include "world.h"
 
 class JelloMesh
 {
@@ -58,7 +58,7 @@ protected:
     friend class FaceMesh;
     friend class TestJelloMesh;
 
-    typedef std::vector<std::vector<std::vector<Particle>>> ParticleGrid;
+    typedef std::vector< std::vector< std::vector<Particle> > > ParticleGrid;
     Particle& GetParticle(ParticleGrid& grid, int i, int j, int k);
     Particle& GetParticle(ParticleGrid& grid, int idx);
     const Particle& GetParticle(const ParticleGrid& grid, int i, int j, int k) const;
@@ -89,8 +89,8 @@ protected:
     class FaceMesh
     {
     public:
-        std::map<int,std::vector<int>> m_neighbors; 
-        std::vector<std::vector<int>> m_strips;
+        std::map< int, std::vector<int> > m_neighbors; 
+        std::vector< std::vector<int> > m_strips;
         double distToEye;
 
         FaceMesh(const JelloMesh& m, Face f);

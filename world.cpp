@@ -1,4 +1,4 @@
-#include "World.h"
+#include "world.h"
 #include <tinyxml.h>
 #include <map>
 #include <GL/glut.h>
