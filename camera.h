@@ -11,7 +11,13 @@
 #endif
 #endif
 
-#include "GL/gl.h"
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#include <OpenGL/gl.h>
+#else
+#include <GL/glut.h>
+#include <GL/gl.h>
+#endif
 #include "vec.h"
 #include "matrix.h"
 

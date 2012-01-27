@@ -29,7 +29,7 @@
 #include <assert.h>
 #include <cmath>
 
-#ifdef LINUX
+#ifndef WIN32
 #include <stdio.h>
 #endif
 
@@ -101,7 +101,11 @@ public:
 #ifdef LINUX
 	double operator [] ( int i) const;// read-only indexing
 #else
+#ifdef __APPLE__
+	double operator [] ( int i) const;// read-only indexing
+#else
 	double vec2::operator [] ( int i) const;// read-only indexing
+#endif
 #endif
 
 	// Special functions
