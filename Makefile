@@ -50,7 +50,7 @@ endif
   LIBRT=
 endif
 
-all: jello
+all: jello run_jello
 
 %.o: %.cc
 	$(CXX) $(CXX_FLAGS) $(INC_DIRS) -o $@ -c $<
@@ -62,6 +62,10 @@ all: jello
 jello: $(OBJ_FILES)
 	@mkdir -p $(OUT_DIR)
 	$(CXX) -o $(OUT_DIR)/$@ $^ $(CXX_FLAGS) $(INC_DIRS) $(LD_FLAGS) $(LIB_DIRS)
+
+run_jello:
+	$(OUT_DIR)/jello
+	
 
 clean:
 	rm -f *.o tinyxml/*.o $(OUT_DIR)/jello

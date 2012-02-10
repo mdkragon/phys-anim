@@ -497,11 +497,11 @@ void JelloMesh::EulerIntegrate(double dt)
 void JelloMesh::MidPointIntegrate(double dt)
 {
     // TODO
+
 }
 
 void JelloMesh::RK4Integrate(double dt)
 {
-    double halfdt = 0.5 * dt;
     ParticleGrid target = m_vparticles;  // target is a copy!
     ParticleGrid& source = m_vparticles;  // source is a ptr!
 
@@ -516,12 +516,12 @@ void JelloMesh::RK4Integrate(double dt)
                 Particle& s = GetParticle(source, i,j,k);
 
                 Particle& k1 = GetParticle(accum1, i,j,k);
-                k1.force = halfdt * s.force * 1/s.mass;
-                k1.velocity = halfdt * s.velocity;
+                k1.force = dt * s.force * 1/s.mass;
+                k1.velocity = dt * s.velocity;
 
                 Particle& t = GetParticle(target, i,j,k);
-                t.velocity = s.velocity + k1.force;
-                t.position = s.position + k1.velocity;
+                t.velocity = s.velocity + k1.force * 0.5;
+                t.position = s.position + k1.velocity * 0.5;
             }
         }
     }
@@ -539,12 +539,12 @@ void JelloMesh::RK4Integrate(double dt)
                 Particle& t = GetParticle(target, i,j,k);
                 Particle& k2 = GetParticle(accum2, i,j,k);
 
-                k2.force = halfdt * t.force * 1/t.mass;
-                k2.velocity = halfdt * t.velocity;
+                k2.force = dt * t.force * 1/t.mass;
+                k2.velocity = dt * t.velocity;
 
                 Particle& s = GetParticle(source, i,j,k);
-                t.velocity = s.velocity + k2.force;
-                t.position = s.position + k2.velocity;
+                t.velocity = s.velocity + k2.force * 0.5;
+                t.position = s.position + k2.velocity * 0.5;
             }
         }
     }

@@ -295,12 +295,19 @@ void World::Draw()
             m[2] = left[2]; m[6] = up[2]; m[10] = forward[2]; m[14] = 0; 
             m[3] = 0.0;  m[7] = 0.0;  m[11] = 0.0;  m[15] = 1.0;
 
-            glPushMatrix();
+	        glPushMatrix();
+			glTranslated(c->start[0], c->start[1], c->start[2]);
             glMultMatrixf(m); 
 	        gluQuadricDrawStyle(quadObj, GLU_FILL);
 	        gluQuadricNormals(quadObj, GLU_SMOOTH);
 	        gluCylinder(quadObj, radius, radius, height, 12, 12);            
-            glPopMatrix();
+			//endCaps
+			glPushMatrix();
+			gluDisk(quadObj, 0, radius, 12, 12);
+			glTranslated(0, 0, height);
+			gluDisk(quadObj, 0, radius, 12, 12);
+			glPopMatrix();
+			glPopMatrix();
         }
         else if (m_shapes[i]->GetType() == GROUND)
         {
@@ -314,6 +321,8 @@ void World::Draw()
         }
     }
 }
+
+
 
 void World::LoadFromFile(const std::string& filename)
 {
