@@ -6,16 +6,13 @@
 #include "vec.h"
 #include "world.h"
 
-class JelloMesh
-{
-public:
+class JelloMesh {
+  public:
     JelloMesh();
     virtual ~JelloMesh();
 
     // Update our JelloMesh (handles collisions and forces)
-    virtual void Update(double dt, 
-        const World& world,
-        const vec3& externalForces = vec3(0.0, -9.8, 0));
+    virtual void Update(double dt, const World& world, const vec3& externalForces = vec3(0.0, -9.8, 0));
 
     // Draw our JelloMesh
     virtual void Draw(const vec3& eyePos);
@@ -51,7 +48,7 @@ public:
     void GetCell(int idx, int& i, int &j, int &k) const;
 
 
-protected:
+  protected:
 
     class Particle;
     class Spring;
@@ -74,21 +71,28 @@ protected:
     virtual void AddShearSpring(Particle& p1, Particle& p2);
 
     class Intersection;
-	virtual void CheckForCollisions(ParticleGrid& grid, const World& world);
-	virtual void ResolveCollisions(ParticleGrid& grid);
-	virtual void ResolveContacts(ParticleGrid& grid);
+    virtual void CheckForCollisions(ParticleGrid& grid, const World& world);
+    virtual void ResolveCollisions(ParticleGrid& grid);
+    virtual void ResolveContacts(ParticleGrid& grid);
     virtual bool FloorIntersection(Particle& p, Intersection& intersection);
     virtual bool CylinderIntersection(Particle& p, World::Cylinder* cylinder, Intersection& intersection);
 
     virtual void ComputeForces(ParticleGrid& grid);
-	virtual void EulerIntegrate(double dt);
-	virtual void MidPointIntegrate(double dt);
-	virtual void RK4Integrate(double dt);
+    virtual void EulerIntegrate(double dt);
+    virtual void MidPointIntegrate(double dt);
+    virtual void RK4Integrate(double dt);
 
-    enum Face {XLEFT, XRIGHT, YTOP, YBOTTOM, ZFRONT, ZBACK};
-    class FaceMesh
-    {
-    public:
+    enum Face {
+      XLEFT, 
+      XRIGHT, 
+      YTOP, 
+      YBOTTOM, 
+      ZFRONT, 
+      ZBACK
+    };
+
+    class FaceMesh {
+      public:
         std::map< int, std::vector<int> > m_neighbors; 
         std::vector< std::vector<int> > m_strips;
         double distToEye;
@@ -106,7 +110,7 @@ protected:
     void DrawCollisionNormals();
     void DrawForces();
 
-protected:
+  protected:
 
     int m_cols, m_rows, m_stacks;
     float m_width, m_height, m_depth;
@@ -121,7 +125,7 @@ protected:
     std::vector<Intersection> m_vcontacts;
     std::vector<Intersection> m_vcollisions;
 
-public:
+  public:
 
     static double g_structuralKs;
     static double g_structuralKd;
@@ -138,11 +142,10 @@ public:
     static const unsigned int NORMALS = 0x100;
     static const unsigned int FORCES = 0x1000;
 
-protected:
+  protected:
 
-    class Particle
-    {
-    public:
+    class Particle {
+      public:
         Particle();
         Particle(const Particle& p);
         Particle& operator=(const Particle& p);
@@ -157,9 +160,8 @@ protected:
         static Particle EMPTY;
     };
 
-    class Spring
-    {
-    public:
+    class Spring {
+      public:
         Spring();
         Spring(const Spring& p);
         Spring& operator=(const Spring& p);
@@ -174,10 +176,13 @@ protected:
         double m_restLen;
     };
 
-    enum IntersectionType { CONTACT, COLLISION };
-    class Intersection
-    {
-    public:
+
+    enum IntersectionType { 
+      CONTACT, 
+      COLLISION 
+    };
+    class Intersection {
+      public:
         Intersection();
         Intersection(const Intersection& p);
         Intersection& operator=(const Intersection& p);

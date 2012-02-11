@@ -5,50 +5,50 @@
 #include <vector>
 #include "vec.h"
 
-class World
-{
-public:
+class World {
+  public:
     World(const std::string& filename);
     virtual ~World();
 
     void LoadFromFile(const std::string& filename);
     virtual void Draw();
 
-public:
-    enum ShapeType {SPHERE, GROUND, CUBE, CYLINDER};
-    class Shape
-    {
-    public:
+  public:
+    enum ShapeType {
+      SPHERE, 
+      GROUND, 
+      CUBE, 
+      CYLINDER
+    };
+
+    class Shape {
+      public:
         vec3 pos;    
         ShapeType GetType() const { return type; }
-    protected:
+      protected:
         Shape(ShapeType t) : type(t), pos(0,0,0) {}
         ShapeType type;
     };
 
-    class Ground : public Shape
-    {
-    public:
+    class Ground : public Shape {
+      public:
         Ground() : Shape(GROUND) {}
     };
 
-    class Sphere : public Shape
-    {
-    public:
+    class Sphere : public Shape {
+      public:
         Sphere() : Shape(SPHERE), r(1.0) {}
         double r;
     };
 
-    class Cube : public Shape
-    {
-    public:
+    class Cube : public Shape {
+      public:
         Cube() : Shape(CUBE), hx(0.5), hy(0.5), hz(0.5) {}
         double hx, hy, hz;
     };
 
-    class Cylinder : public Shape
-    {
-    public:
+    class Cylinder : public Shape {
+      public:
         Cylinder() : Shape(CYLINDER), r(1.0) {}
         vec3 start, end;
         double r;

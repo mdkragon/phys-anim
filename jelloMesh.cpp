@@ -7,8 +7,8 @@
 #include <algorithm>
 
 // TODO
-double JelloMesh::g_structuralKs = 0.0; 
-double JelloMesh::g_structuralKd = 0.0; 
+double JelloMesh::g_structuralKs = 2000.0; 
+double JelloMesh::g_structuralKd = 10.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
 double JelloMesh::g_shearKs = 0.0;
@@ -26,45 +26,37 @@ JelloMesh::JelloMesh() :
     SetGridSize(6, 6, 6);
 }
 
-JelloMesh::~JelloMesh()
-{
-}
+JelloMesh::~JelloMesh() { }
 
-void JelloMesh::Reset()
-{
+void JelloMesh::Reset() {
     InitJelloMesh();
 }
 
-JelloMesh::Particle& JelloMesh::GetParticle(JelloMesh::ParticleGrid& grid, int i, int j, int k)
-{
-    return grid[i][j][k];
+JelloMesh::Particle& JelloMesh::GetParticle(JelloMesh::ParticleGrid& grid, int i, int j, int k) {
+  return grid[i][j][k];
 }
 
-JelloMesh::Particle& JelloMesh::GetParticle(JelloMesh::ParticleGrid& grid, int idx)
-{
-    int i,j,k;
-    GetCell(idx, i, j, k);
-    return GetParticle(grid, i,j,k);
+JelloMesh::Particle& JelloMesh::GetParticle(JelloMesh::ParticleGrid& grid, int idx) {
+  int i,j,k;
+  GetCell(idx, i, j, k);
+  return GetParticle(grid, i,j,k);
 }
 
-const JelloMesh::Particle& JelloMesh::GetParticle(const JelloMesh::ParticleGrid& grid, int i, int j, int k) const
-{
-    return grid[i][j][k];
+const JelloMesh::Particle& JelloMesh::GetParticle(const JelloMesh::ParticleGrid& grid, int i, int j, int k) const {
+  return grid[i][j][k];
 }
 
-const JelloMesh::Particle& JelloMesh::GetParticle(const JelloMesh::ParticleGrid& grid, int idx) const
-{
-    int i,j,k;
-    GetCell(idx, i, j, k);
-    return GetParticle(grid, i,j,k);
+const JelloMesh::Particle& JelloMesh::GetParticle(const JelloMesh::ParticleGrid& grid, int idx) const {
+  int i,j,k;
+  GetCell(idx, i, j, k);
+  return GetParticle(grid, i,j,k);
 }
 
-bool JelloMesh::isInterior(const JelloMesh::Spring& s) const
-{
-    int i1,j1,k1,i2,j2,k2;
-    GetCell(s.m_p1, i1, j1, k1);
-    GetCell(s.m_p2, i2, j2, k2);
-    return isInterior(i1,j1,k1) || isInterior(i2,j2,k2);
+bool JelloMesh::isInterior(const JelloMesh::Spring& s) const {
+  int i1,j1,k1,i2,j2,k2;
+  GetCell(s.m_p1, i1, j1, k1);
+  GetCell(s.m_p2, i2, j2, k2);
+  return isInterior(i1,j1,k1) || isInterior(i2,j2,k2);
 }
 
 
@@ -163,227 +155,224 @@ void JelloMesh::GetCell(int idx, int& i, int &j, int& k) const
     k = (int) FLOOR(tmp/rows);
 }
 
-void JelloMesh::InitJelloMesh()
-{
-    m_vsprings.clear();
+void JelloMesh::InitJelloMesh() {
+  m_vsprings.clear();
 
-    if (m_width < 0.01 || m_height < 0.01 || m_depth < 0.01) return;
-    if (m_cols < 1 || m_rows < 1 || m_stacks < 1) return;
+  if (m_width < 0.01 || m_height < 0.01 || m_depth < 0.01) return;
+  if (m_cols < 1 || m_rows < 1 || m_stacks < 1) return;
 
-    // Init particles
-    float wcellsize = m_width / m_cols;
-    float hcellsize = m_height / m_rows;
-    float dcellsize = m_depth / m_stacks;
+  // Init particles
+  float wcellsize = m_width / m_cols;
+  float hcellsize = m_height / m_rows;
+  float dcellsize = m_depth / m_stacks;
     
-    for (int i = 0; i < m_rows+1; i++)
-    {
-        for (int j = 0; j < m_cols+1; j++)
-        {
-            for (int k = 0; k < m_stacks+1; k++)
-            {
-                float x = -m_width*0.5f + wcellsize*i;
-                float y = 0.5 + hcellsize*j; 
-                float z = -m_depth*0.5f + dcellsize*k;
-                m_vparticles[i][j][k] = Particle(GetIndex(i,j,k), vec3(x, y, z));
-            }
+  for (int i = 0; i < m_rows+1; i++) {
+    for (int j = 0; j < m_cols+1; j++) {
+      for (int k = 0; k < m_stacks+1; k++) {
+        float x = -m_width*0.5f + wcellsize*i;
+        float y = 0.5 + hcellsize*j; 
+        float z = -m_depth*0.5f + dcellsize*k;
+        m_vparticles[i][j][k] = Particle(GetIndex(i,j,k), vec3(x, y, z));
+      }
+    }
+  }
+
+  // Setup structural springs
+  ParticleGrid& g = m_vparticles;
+  for (int i = 0; i < m_rows+1; i++) {
+    for (int j = 0; j < m_cols+1; j++) {
+      for (int k = 0; k < m_stacks+1; k++) {
+        if (j < m_cols) {
+          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+1,k));
         }
-    }
-
-    // Setup structural springs
-    ParticleGrid& g = m_vparticles;
-    for (int i = 0; i < m_rows+1; i++)
-    {
-        for (int j = 0; j < m_cols+1; j++)
-        {
-            for (int k = 0; k < m_stacks+1; k++)
-            {
-                if (j < m_cols) AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+1,k));
-                if (i < m_rows) AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j,k));
-                if (k < m_stacks) AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j,k+1));
-            }
+        if (i < m_rows) { 
+          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j,k));
         }
-    }
-
-    // Init mesh geometry
-    m_mesh.clear();
-    m_mesh.push_back(FaceMesh(*this,XLEFT));
-    m_mesh.push_back(FaceMesh(*this,XRIGHT));
-    m_mesh.push_back(FaceMesh(*this,YTOP));
-    m_mesh.push_back(FaceMesh(*this,YBOTTOM));
-    m_mesh.push_back(FaceMesh(*this,ZFRONT));
-    m_mesh.push_back(FaceMesh(*this,ZBACK));
-}
-
-void JelloMesh::AddStructuralSpring(Particle& p1, Particle& p2)
-{
-    double restLen = (p1.position - p2.position).Length();
-    m_vsprings.push_back(Spring(STRUCTURAL, p1.index, p2.index, g_structuralKs, g_structuralKd, restLen));
-}
-
-void JelloMesh::AddBendSpring(JelloMesh::Particle& p1, JelloMesh::Particle& p2)
-{
-    double restLen = (p1.position - p2.position).Length();
-    m_vsprings.push_back(Spring(BEND, p1.index, p2.index, g_bendKs, g_bendKd, restLen));
-}
-
-void JelloMesh::AddShearSpring(JelloMesh::Particle& p1, JelloMesh::Particle& p2)
-{
-    double restLen = (p1.position - p2.position).Length();
-    m_vsprings.push_back(Spring(SHEAR, p1.index, p2.index, g_shearKs, g_shearKd, restLen));
-}
-
-void JelloMesh::SetIntegrationType(JelloMesh::IntegrationType type)
-{
-    m_integrationType = type;
-}
-
-JelloMesh::IntegrationType JelloMesh::GetIntegrationType() const
-{
-    return m_integrationType;
-}
-
-void JelloMesh::SetDrawFlags(unsigned int flags)
-{
-    m_drawflags = flags;
-}
-
-unsigned int JelloMesh::GetDrawFlags() const
-{
-    return m_drawflags;
-}
-
-void JelloMesh::DrawMesh(const vec3& eyePos)
-{
-    const ParticleGrid& g = m_vparticles;
-    float red[4] = {1.0,0.4,0.4,0.8};
-    float white[4] = {1.0,1.0,1.0,1.0};
-    float pink[4] = {0.5,0.0,0.0,1.0};
-    float black[4] = {0.0,0.0,0.0,1.0};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, red);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, black);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, pink);
-
-    for (unsigned int i = 0; i < m_mesh.size(); i++)
-    {        
-       m_mesh[i].CalcDistToEye(*this, eyePos);
-    }
-    std::sort(m_mesh.begin(), m_mesh.end(), FaceMesh::compare);
-    for (unsigned int i = 0; i < m_mesh.size(); i++)
-    {        
-       m_mesh[i].Draw(*this);
-    }
-
-    //glDisable(GL_LIGHTING);
-    //for (unsigned int i = 0; i < m_mesh.size(); i++)
-    //{        
-    //   m_mesh[i].DrawNormals(*this);
-    //}
-
-}
-
-void JelloMesh::DrawSprings(double a)
-{
-    const ParticleGrid& g = m_vparticles;
-    glBegin(GL_LINES);
-    for (unsigned int i = 0; i < m_vsprings.size(); i++)
-    {
-        if (!(m_vsprings[i].m_type & m_drawflags)) continue;
-        if (isInterior(m_vsprings[i])) continue;
-
-        switch (m_vsprings[i].m_type)
-        {
-        case BEND:       glColor4f(1.0, 1.0, 0.0, a); break;
-        case STRUCTURAL: glColor4f(1.0, 1.0, 0.0, a); break;
-        case SHEAR:      glColor4f(0.0, 1.0, 1.0, a); break;
-        };
-
-        vec3 p1 = GetParticle(g, m_vsprings[i].m_p1).position;
-        vec3 p2 = GetParticle(g, m_vsprings[i].m_p2).position;
-        glVertex3f(p1[0], p1[1], p1[2]);
-        glVertex3f(p2[0], p2[1], p2[2]);
-    }
-    glEnd();
-}
-
-void JelloMesh::DrawCollisionNormals()
-{
-    const ParticleGrid& g = m_vparticles;
-    glBegin(GL_LINES);
-    glColor3f(0.0, 1.0, 0.0);
-    for(unsigned int i = 0; i < m_vcollisions.size(); i++)
-    {
-       Intersection intersection = m_vcollisions[i];
-       if (isInterior(intersection.m_p)) continue;
-
-       const Particle& pt = GetParticle(g, intersection.m_p);
-       vec3 normal = intersection.m_normal;
-       vec3 end = pt.position + 0.2 * normal;
-       glVertex3f(pt.position[0], pt.position[1], pt.position[2]);
-       glVertex3f(end[0], end[1], end[2]);
-    }     
-    glEnd();
-}
-
-void JelloMesh::DrawForces()
-{
-    glBegin(GL_LINES);
-    glColor3f(1.0, 0.0, 0.0);
-    for (int i = 0; i < m_rows+1; i++)
-    {
-        for (int j = 0; j < m_cols+1; j++)
-        {
-            for (int k = 0; k < m_stacks+1; k++)
-            {
-                Particle p = m_vparticles[i][j][k];
-                if (isInterior(i,j,k)) continue;
-
-                vec3 normal = p.force.Normalize();
-                vec3 end = p.position + 0.1 * normal;
-                glVertex3f(p.position[0], p.position[1], p.position[2]);
-                glVertex3f(end[0], end[1], end[2]);
-            }
+        if (k < m_stacks) {
+          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j,k+1));
         }
-    }     
-    glEnd();
+      }
+    }
+  }
+
+  // Init mesh geometry
+  m_mesh.clear();
+  m_mesh.push_back(FaceMesh(*this,XLEFT));
+  m_mesh.push_back(FaceMesh(*this,XRIGHT));
+  m_mesh.push_back(FaceMesh(*this,YTOP));
+  m_mesh.push_back(FaceMesh(*this,YBOTTOM));
+  m_mesh.push_back(FaceMesh(*this,ZFRONT));
+  m_mesh.push_back(FaceMesh(*this,ZBACK));
 }
 
-void JelloMesh::Draw(const vec3& eyePos)
-{
-    if (m_drawflags & MESH) DrawMesh(eyePos);
+void JelloMesh::AddStructuralSpring(Particle& p1, Particle& p2) {
+  double restLen = (p1.position - p2.position).Length();
+  m_vsprings.push_back(Spring(STRUCTURAL, p1.index, p2.index, g_structuralKs, g_structuralKd, restLen));
+}
 
-    if (m_drawflags & (STRUCTURAL|BEND|SHEAR))
-    {
-        glDisable(GL_LIGHTING);
-        glDisable(GL_DEPTH_TEST);
-        glLineWidth(1.0);
-        DrawSprings(0.2);
-        glLineWidth(1.5);
-        glEnable(GL_DEPTH_TEST);
-        DrawSprings(0.4);
+void JelloMesh::AddBendSpring(JelloMesh::Particle& p1, JelloMesh::Particle& p2) {
+  double restLen = (p1.position - p2.position).Length();
+  m_vsprings.push_back(Spring(BEND, p1.index, p2.index, g_bendKs, g_bendKd, restLen));
+}
+
+void JelloMesh::AddShearSpring(JelloMesh::Particle& p1, JelloMesh::Particle& p2) {
+  double restLen = (p1.position - p2.position).Length();
+  m_vsprings.push_back(Spring(SHEAR, p1.index, p2.index, g_shearKs, g_shearKd, restLen));
+}
+
+void JelloMesh::SetIntegrationType(JelloMesh::IntegrationType type) {
+  m_integrationType = type;
+}
+
+JelloMesh::IntegrationType JelloMesh::GetIntegrationType() const {
+  return m_integrationType;
+}
+
+void JelloMesh::SetDrawFlags(unsigned int flags) {
+  m_drawflags = flags;
+}
+
+unsigned int JelloMesh::GetDrawFlags() const {
+  return m_drawflags;
+}
+
+void JelloMesh::DrawMesh(const vec3& eyePos) {
+  const ParticleGrid& g = m_vparticles;
+  float red[4] = {1.0,0.4,0.4,0.8};
+  float white[4] = {1.0,1.0,1.0,1.0};
+  float pink[4] = {0.5,0.0,0.0,1.0};
+  float black[4] = {0.0,0.0,0.0,1.0};
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, red);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, black);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, pink);
+
+  for (unsigned int i = 0; i < m_mesh.size(); i++) {        
+    m_mesh[i].CalcDistToEye(*this, eyePos);
+  }
+  std::sort(m_mesh.begin(), m_mesh.end(), FaceMesh::compare);
+  for (unsigned int i = 0; i < m_mesh.size(); i++) {        
+    m_mesh[i].Draw(*this);
+  }
+
+  //glDisable(GL_LIGHTING);
+  //for (unsigned int i = 0; i < m_mesh.size(); i++)
+  //{        
+  //   m_mesh[i].DrawNormals(*this);
+  //}
+
+}
+
+void JelloMesh::DrawSprings(double a) {
+  const ParticleGrid& g = m_vparticles;
+  glBegin(GL_LINES);
+  for (unsigned int i = 0; i < m_vsprings.size(); i++) {
+    if (!(m_vsprings[i].m_type & m_drawflags)) continue;
+    if (isInterior(m_vsprings[i])) continue;
+
+    switch (m_vsprings[i].m_type) {
+      case BEND:       
+        glColor4f(1.0, 1.0, 0.0, a); 
+        break;
+      case STRUCTURAL: 
+        glColor4f(1.0, 1.0, 0.0, a); 
+        break;
+      case SHEAR:      
+        glColor4f(0.0, 1.0, 1.0, a); 
+        break;
+    };
+
+    vec3 p1 = GetParticle(g, m_vsprings[i].m_p1).position;
+    vec3 p2 = GetParticle(g, m_vsprings[i].m_p2).position;
+    glVertex3f(p1[0], p1[1], p1[2]);
+    glVertex3f(p2[0], p2[1], p2[2]);
+  }
+
+  glEnd();
+}
+
+void JelloMesh::DrawCollisionNormals() {
+  const ParticleGrid& g = m_vparticles;
+  glBegin(GL_LINES);
+  glColor3f(0.0, 1.0, 0.0);
+  for(unsigned int i = 0; i < m_vcollisions.size(); i++) {
+    Intersection intersection = m_vcollisions[i];
+    if (isInterior(intersection.m_p)) {
+      continue;
     }
 
-    if (m_drawflags & NORMALS) DrawCollisionNormals();
-    if (m_drawflags & FORCES) DrawForces();
-
-    glEnable(GL_LIGHTING);
+    const Particle& pt = GetParticle(g, intersection.m_p);
+    vec3 normal = intersection.m_normal;
+    vec3 end = pt.position + 0.2 * normal;
+    glVertex3f(pt.position[0], pt.position[1], pt.position[2]);
+    glVertex3f(end[0], end[1], end[2]);
+  }     
+  glEnd();
 }
 
-void JelloMesh::Update(double dt, const World& world, const vec3& externalForces)
-{
-    m_externalForces = externalForces;
+void JelloMesh::DrawForces() {
+  glBegin(GL_LINES);
+  glColor3f(1.0, 0.0, 0.0);
+  for (int i = 0; i < m_rows+1; i++) {
+    for (int j = 0; j < m_cols+1; j++) {
+      for (int k = 0; k < m_stacks+1; k++) {
+        Particle p = m_vparticles[i][j][k];
+        if (isInterior(i,j,k)) {
+          continue;
+        }
+
+        vec3 normal = p.force.Normalize();
+        vec3 end = p.position + 0.1 * normal;
+        glVertex3f(p.position[0], p.position[1], p.position[2]);
+        glVertex3f(end[0], end[1], end[2]);
+      }
+    }
+  }     
+  glEnd();
+}
+
+void JelloMesh::Draw(const vec3& eyePos) {
+  if (m_drawflags & MESH) DrawMesh(eyePos);
+
+  if (m_drawflags & (STRUCTURAL|BEND|SHEAR)) {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glLineWidth(1.0);
+    DrawSprings(0.2);
+    glLineWidth(1.5);
+    glEnable(GL_DEPTH_TEST);
+    DrawSprings(0.4);
+  }
+
+  if (m_drawflags & NORMALS) {
+    DrawCollisionNormals();
+  }
+  if (m_drawflags & FORCES) {
+    DrawForces();
+  }
+
+  glEnable(GL_LIGHTING);
+}
+
+void JelloMesh::Update(double dt, const World& world, const vec3& externalForces) {
+  m_externalForces = externalForces;
 
 	CheckForCollisions(m_vparticles, world);
 	ComputeForces(m_vparticles);
 	ResolveContacts(m_vparticles);
 	ResolveCollisions(m_vparticles);
 
-    switch (m_integrationType)
-    {
-    case EULER: EulerIntegrate(dt); break;
-    case MIDPOINT: MidPointIntegrate(dt); break;
-    case RK4: RK4Integrate(dt); break;
-    }
+  switch (m_integrationType) {
+    case EULER: 
+      EulerIntegrate(dt); 
+      break;
+    case MIDPOINT: 
+      MidPointIntegrate(dt); 
+      break;
+    case RK4: 
+      RK4Integrate(dt); 
+      break;
+  }
 }
 
 void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
@@ -450,16 +439,26 @@ void JelloMesh::ComputeForces(ParticleGrid& grid) {
   }
 }
 
-void JelloMesh::ResolveContacts(ParticleGrid& grid)
-{
-    for (unsigned int i = 0; i < m_vcontacts.size(); i++)
-    {
-       const Intersection& contact = m_vcontacts[i];
-       Particle& p = GetParticle(grid, contact.m_p);
-       vec3 normal = contact.m_normal; 
+void JelloMesh::ResolveContacts(ParticleGrid& grid) {
+  // coefficient of restitution [0.0 - 1.0]
+  // 1 - perfect bounciness (no loss of energy)
+  // 0 - no bounciness (hit and stick)
+  float coefOfRestitution = 0.8;
 
-        // TODO
-    }
+  for (unsigned int i = 0; i < m_vcontacts.size(); i++) {
+    const Intersection& contact = m_vcontacts[i];
+    Particle& p = GetParticle(grid, contact.m_p);
+    vec3 normal = contact.m_normal; 
+
+    // reflect particle based on collision normal
+    // project velocity onto normal
+    vec3 Nproj = Dot(p.velocity, normal) * normal;
+    // reflect velocity (factor in bounciness of object, coefficient of restitution)
+    vec3 vprime = p.velocity - 2 * Nproj * coefOfRestitution;
+
+    // set particles velocity
+    p.velocity = vprime;
+  }
 }
 
 void JelloMesh::ResolveCollisions(ParticleGrid& grid)
