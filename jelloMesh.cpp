@@ -142,8 +142,8 @@ float JelloMesh::GetDepth() const
 int JelloMesh::GetIndex(int i, int j, int k) const
 {
     int cols = j;
-    int rows = i*(m_rows+1);
-    int stacks = k*(m_cols+1)*(m_stacks+1);
+    int rows = i*(m_cols+1);
+    int stacks = k*(m_cols+1)*(m_rows+1);
     return cols + rows + stacks;
 }
 
