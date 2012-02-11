@@ -391,9 +391,15 @@ void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
           if (world.m_shapes[i]->GetType() == World::CYLINDER 
               && CylinderIntersection(p, (World::Cylinder*) world.m_shapes[i], intersection)) {
             m_vcontacts.push_back(intersection);
+            if (intersection.m_type == COLLISION) {
+              m_vcollisions.push_back(intersection);
+            }
           } else if (world.m_shapes[i]->GetType() == World::GROUND 
                       && FloorIntersection(p, intersection)) {
             m_vcontacts.push_back(intersection);
+            if (intersection.m_type == COLLISION) {
+              m_vcollisions.push_back(intersection);
+            }
           }
         }
       }
@@ -461,16 +467,17 @@ void JelloMesh::ResolveContacts(ParticleGrid& grid) {
   }
 }
 
-void JelloMesh::ResolveCollisions(ParticleGrid& grid)
-{
-    for(unsigned int i = 0; i < m_vcollisions.size(); i++)
-    {
-        Intersection result = m_vcollisions[i];
-        Particle& pt = GetParticle(grid, result.m_p);
-        vec3 normal = result.m_normal;
-        float dist = result.m_distance;
+void JelloMesh::ResolveCollisions(ParticleGrid& grid) {
+  for(unsigned int i = 0; i < m_vcollisions.size(); i++) {
+    Intersection result = m_vcollisions[i];
+    Particle& pt = GetParticle(grid, result.m_p);
+    vec3 normal = result.m_normal;
+    float dist = result.m_distance;
 
-        // TODO
+    // TODO: better collision handling?
+    // penalty force?
+    // for now just move the particle to surface
+    pt.position += dist * normal;
 	}
 }
 
@@ -495,7 +502,7 @@ bool JelloMesh::FloorIntersection(Particle& p, Intersection& intersection) {
   // for floor it is just up vector
   intersection.m_normal = vec3(0, 1, 0);
   // compute distance from edge
-  intersection.m_distance = p.position[1] - 0.0;
+  intersection.m_distance = -p.position[1];
 
 
   return true;
