@@ -60,99 +60,84 @@ bool JelloMesh::isInterior(const JelloMesh::Spring& s) const {
 }
 
 
-bool JelloMesh::isInterior(int idx) const
-{
-    int i,j,k;
-    GetCell(idx, i, j, k);
-    return isInterior(i,j,k);
+bool JelloMesh::isInterior(int idx) const {
+  int i,j,k;
+  GetCell(idx, i, j, k);
+  return isInterior(i,j,k);
 }
 
-bool JelloMesh::isInterior(int i, int j, int k) const
-{
-    return (i*j*k*(m_rows-i)*(m_cols-j)*(m_stacks-k) != 0);
+bool JelloMesh::isInterior(int i, int j, int k) const {
+  return (i*j*k*(m_rows-i)*(m_cols-j)*(m_stacks-k) != 0);
 }
 
-void JelloMesh::SetGridSize(int cols, int rows, int stacks)
-{
-    m_cols = cols;
-    m_rows = rows;
-    m_stacks = stacks;
+void JelloMesh::SetGridSize(int cols, int rows, int stacks) {
+  m_cols = cols;
+  m_rows = rows;
+  m_stacks = stacks;
 
-    if (m_cols > 0 && m_rows > 0 && m_stacks > 0)
-    {
-        m_vparticles.resize(m_rows+1);
-        for (int i = 0; i < m_rows+1; i++)
-        {
-            m_vparticles[i].resize(m_cols+1);
-            for (int j = 0; j < m_cols+1; j++)
-            {
-                m_vparticles[i][j].resize(m_stacks+1);
-            }
-        }
+  if (m_cols > 0 && m_rows > 0 && m_stacks > 0) {
+    m_vparticles.resize(m_rows+1);
+    for (int i = 0; i < m_rows+1; i++) {
+      m_vparticles[i].resize(m_cols+1);
+      for (int j = 0; j < m_cols+1; j++) {
+        m_vparticles[i][j].resize(m_stacks+1);
+      }
     }
-    InitJelloMesh();
+  }
+  InitJelloMesh();
 }
 
-int JelloMesh::GetGridCols() const
-{
-    return m_cols;
+int JelloMesh::GetGridCols() const {
+  return m_cols;
 }
 
-int JelloMesh::GetGridRows() const
-{
-    return m_rows;
+int JelloMesh::GetGridRows() const {
+  return m_rows;
 }
 
-int JelloMesh::GetGridStacks() const
-{
-    return m_stacks;
+int JelloMesh::GetGridStacks() const {
+  return m_stacks;
 }
 
-void JelloMesh::SetSize(float width, float height, float depth)
-{
-    m_width = width;
-    m_height = height;
-    m_depth = depth;
-    InitJelloMesh();
+void JelloMesh::SetSize(float width, float height, float depth) {
+  m_width = width;
+  m_height = height;
+  m_depth = depth;
+  InitJelloMesh();
 }
 
-float JelloMesh::GetWidth() const
-{
-    return m_width;
+float JelloMesh::GetWidth() const {
+  return m_width;
 }
 
-float JelloMesh::GetHeight() const
-{
-    return m_height;
+float JelloMesh::GetHeight() const {
+  return m_height;
 }
 
-float JelloMesh::GetDepth() const
-{
-    return m_depth;
+float JelloMesh::GetDepth() const {
+  return m_depth;
 }
 
-int JelloMesh::GetIndex(int i, int j, int k) const
-{
-    int cols = j;
-    int rows = i*(m_cols+1);
-    int stacks = k*(m_cols+1)*(m_rows+1);
-    return cols + rows + stacks;
+int JelloMesh::GetIndex(int i, int j, int k) const {
+  int cols = j;
+  int rows = i*(m_cols+1);
+  int stacks = k*(m_cols+1)*(m_rows+1);
+  return cols + rows + stacks;
 }
 
 #define ROUND(x) (floor(x + 0.5))
 #define FLOOR(x) (floor(x))
 #define FRACT(x) (x - FLOOR(x))
-void JelloMesh::GetCell(int idx, int& i, int &j, int& k) const
-{
-    float rows = m_rows+1;
-    float cols = m_cols+1;
-    float stacks = m_stacks+1;
+void JelloMesh::GetCell(int idx, int& i, int &j, int& k) const {
+  float rows = m_rows+1;
+  float cols = m_cols+1;
+  float stacks = m_stacks+1;
 
-    // derived from idx = cols*(rows*k + i) + j
-    float tmp = FLOOR(idx/cols);
-    j = (int) ROUND(cols*(FRACT(idx/cols)));
-    i = (int) ROUND(rows*(FRACT(tmp/rows)));
-    k = (int) FLOOR(tmp/rows);
+  // derived from idx = cols*(rows*k + i) + j
+  float tmp = FLOOR(idx/cols);
+  j = (int) ROUND(cols*(FRACT(idx/cols)));
+  i = (int) ROUND(rows*(FRACT(tmp/rows)));
+  k = (int) FLOOR(tmp/rows);
 }
 
 void JelloMesh::InitJelloMesh() {
@@ -175,13 +160,11 @@ void JelloMesh::InitJelloMesh() {
         float y = hcellsize*j; 
         float z = -m_depth*0.5f + dcellsize*k;
  
-        /*
         // rotate about x
         float ry = y * cos(M_PI/4) - z * sin(M_PI/4);
         float rz = y * sin(M_PI/4) + z * cos(M_PI/4);
         y = ry;
         z = rz;
-        */
 
         // translate off ground
         y += 1.0;
@@ -526,7 +509,6 @@ void JelloMesh::ResolveContacts(ParticleGrid& grid) {
     Particle& p = GetParticle(grid, contact.m_p);
     vec3 normal = contact.m_normal; 
 
-    // only reflect if particle is going towards the object
     double vdotn = Dot(p.velocity, normal);
 
     // reflect particle based on collision normal
@@ -584,16 +566,204 @@ bool JelloMesh::FloorIntersection(Particle& p, Intersection& intersection) {
   return true;
 }
 
-bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, 
-                                 JelloMesh::Intersection& result)
-{
-    vec3 cylinderStart = cylinder->start;
-    vec3 cylinderEnd = cylinder->end;
-    vec3 cylinderAxis = cylinderEnd - cylinderStart;
-    double cylinderRadius = cylinder->r; 
+bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, JelloMesh::Intersection& intersection) {
+  vec3 start = cylinder->start;
+  vec3 end = cylinder->end;
+  vec3 axis = end - start;
+  double r = cylinder->r; 
+  double cylinderLen = cylinder->len; 
+  double sqcylinderLen = cylinder->sqlen; 
+  // normalized axis
+  vec3 naxis = axis / cylinderLen;
 
-    // TODO
+  double contactThres = 0.01;
+
+  // projection of p onto cylinder axis
+  double pdota = Dot((p.position - start), naxis);
+  vec3 pproj = pdota * naxis;
+  // rejection of p from cylinder axis
+  vec3 prej = (p.position - start) - pproj;
+  double d = prej.Length();
+  vec3 nprej = prej / d;
+
+  // if p is outside the radius then no contact
+  if (d > r + contactThres) {
     return false;
+  }
+  // is p outside end caps
+  if (pdota < 0.0 - contactThres || pdota > sqcylinderLen + pow(contactThres,2)) {
+    return false;
+  }
+
+
+  // There is a contact/collision
+  // store particle index
+  intersection.m_p = p.index;
+
+  // CONTACTS
+  // is the particle on the edge
+  if (pdota <= 0.0 && d < r + contactThres) {
+    // contact start edge
+    intersection.m_type = CONTACT;
+    if (d < r) {
+      // end cap contact
+      // set collision normal (negative of the axis)
+      intersection.m_normal = -axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -sqrt(pdota);
+    }  else {
+      // contact with edge
+      // set collision normal (rejection vector)
+      intersection.m_normal = nprej;
+      // compute distance from edge
+      intersection.m_distance = -(d - r);
+    }
+    return true;
+  }
+  if (pdota >= sqcylinderLen && d < r + contactThres) {
+    // contact end edge
+    intersection.m_type = CONTACT;
+    if (d < r) {
+      // end cap contact
+      // set collision normal (positive of the axis)
+      intersection.m_normal = axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -(sqrt(pdota) - cylinderLen);
+    }  else {
+      // contact with edge
+      // set collision normal (rejection vector)
+      intersection.m_normal = nprej;
+      // compute distance from edge
+      intersection.m_distance = -(d - r);
+    }
+    return true;
+  }
+  if (d > r) {
+    // contact wall
+    intersection.m_type = CONTACT;
+
+    // contact with edge
+    // set collision normal (rejection vector)
+    intersection.m_normal = nprej;
+    // compute distance from edge
+    intersection.m_distance = -(d - r);
+
+    return true;
+  }
+
+  printf("collision\n");
+  fflush(stdin);
+
+  // contact wall
+  intersection.m_type = COLLISION;
+
+  // contact with edge
+  // set collision normal (rejection vector)
+  intersection.m_normal = nprej;
+  // compute distance from edge
+  intersection.m_distance = -(d - r);
+
+  return true;
+
+
+
+
+
+
+  /*
+  // vector from start to p
+  vec3 start_p = p.position - cylinderStart;
+  double p_dot_a = Dot(start_p, cylinderAxis)/pow(cylinderLen,2);
+
+  // if dot product is negative it is below cylinder
+  if (p_dot_a < 0.0 - contactThres) {
+    return false;
+  }
+  // if dot product is greater than the length then it is above the cylinder
+  if (p_dot_a > cylinderLen + contactThres) {
+    return false;
+  }
+
+  // find rejection of p on the line
+  vec3 rp = start_p - p_dot_a * cylinderAxis; 
+  double d = rp.Length();
+
+  // if distance to the line is greater than the radius it is outside the cylinder
+  if (d > cylinderRadius + contactThres) { 
+    return false; 
+  }
+  
+
+  // There is a contact/collision
+  // store particle index
+  intersection.m_p = p.index;
+
+
+  // CONTACTS
+  // is the particle on the edge
+  if (p_dot_a <= 0.0 && d < cylinderRadius + contactThres) {
+    // contact start edge
+    intersection.m_type = CONTACT;
+    if (d < cylinderRadius) {
+      // end cap contact
+      // set collision normal (negative of the axis)
+      intersection.m_normal = -cylinderAxis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -p_dot_a;
+    }  else {
+      // contact with edge
+      // set collision normal (rejection vector)
+      intersection.m_normal = rp;
+      // compute distance from edge
+      intersection.m_distance = -(d - cylinderRadius);
+    }
+    return true;
+  }
+  if (p_dot_a >= cylinderLen && d < cylinderRadius + contactThres) {
+    // contact end edge
+    intersection.m_type = CONTACT;
+    if (d < cylinderRadius) {
+      // end cap contact
+      // set collision normal (positive of the axis)
+      intersection.m_normal = cylinderAxis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -(p_dot_a - cylinderLen);
+    }  else {
+      // contact with edge
+      // set collision normal (rejection vector)
+      intersection.m_normal = rp;
+      // compute distance from edge
+      intersection.m_distance = -(d - cylinderRadius);
+    }
+    return true;
+  }
+  if (d > cylinderRadius) {
+    // contact wall
+    intersection.m_type = CONTACT;
+
+    // contact with edge
+    // set collision normal (rejection vector)
+    intersection.m_normal = rp;
+    // compute distance from edge
+    intersection.m_distance = -(d - cylinderRadius);
+
+    return true;
+  }
+
+
+  // COLLISIONS
+
+  // contact wall
+  intersection.m_type = CONTACT;
+
+  // contact with edge
+  // set collision normal (rejection vector)
+  intersection.m_normal = rp;
+  // compute distance from edge
+  intersection.m_distance = -(d - cylinderRadius);
+
+  return true;
+  */
 }
 
 void JelloMesh::EulerIntegrate(double dt) {

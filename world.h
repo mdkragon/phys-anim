@@ -52,6 +52,8 @@ class World {
         Cylinder() : Shape(CYLINDER), r(1.0) {}
         vec3 start, end;
         double r;
+        double len;
+        double sqlen;
     };
 
     std::vector<Shape*> m_shapes;

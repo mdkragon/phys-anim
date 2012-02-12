@@ -84,33 +84,34 @@ public:
             m_curBody = sphere;
 			return true;
 		}
-		else if(element.ValueStr() == "cylinder")
-		{
+		else if(element.ValueStr() == "cylinder") {
 			if(element.Parent()->ValueStr() != "bodies") return false;
 			assert(m_curBody == NULL);
 
 			double r = 1;
-            double startx, starty, startz;
-            double endx, endy, endz;
-			element.Attribute("r", &r);
+      double startx, starty, startz;
+      double endx, endy, endz;
+      element.Attribute("r", &r);
 
-            element.Attribute("sx", &startx);
+      element.Attribute("sx", &startx);
 			element.Attribute("sy", &starty);
 			element.Attribute("sz", &startz);
 
-            element.Attribute("ex", &endx);
+      element.Attribute("ex", &endx);
 			element.Attribute("ey", &endy);
 			element.Attribute("ez", &endz);
 
-            World::Cylinder* cylinder = new World::Cylinder();
-            cylinder->start = vec3(startx, starty, startz);
-            cylinder->end = vec3(endx, endy, endz);
-            cylinder->r = r;
-            m_curBody = cylinder;
+      World::Cylinder* cylinder = new World::Cylinder();
+      cylinder->start = vec3(startx, starty, startz);
+      cylinder->end = vec3(endx, endy, endz);
+      vec3 axis = cylinder->end - cylinder->start;
+      cylinder->len = axis.Length();
+      cylinder->sqlen = axis.SqrLength();
+      cylinder->r = r;
+      m_curBody = cylinder;
 			return true;
-		}
-		else if(element.ValueStr() == "pos")
-		{
+
+		} else if(element.ValueStr() == "pos") {
 			if(!IsBody(element.Parent())) return false;
 			assert(m_curBody != NULL);
 			double x = 0;
