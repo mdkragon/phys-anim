@@ -6,6 +6,8 @@
 #endif
 #include <algorithm>
 
+#define PRINT_NORMAL_DIST(n, d) {printf("normal: (%0.3f, %0.3f, %0.3f) :: dist = %0.5f\n", n[0], n[1], n[2], d); fflush(stdout); }
+
 // GridSize = 6
 double JelloMesh::g_structuralKs = 1000.0; 
 double JelloMesh::g_structuralKd = 1.0; 
@@ -591,71 +593,60 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
     return false;
   }
   // is p outside end caps
-  if (pdota < 0.0 - contactThres || pdota > sqcylinderLen + pow(contactThres,2)) {
+  if (pdota < 0.0 - contactThres || pdota > cylinderLen + contactThres) {
     return false;
   }
 
+  //printf("pdota: %f: sqLen: %f: len: %f\n", pdota, sqcylinderLen, cylinderLen);
 
   // There is a contact/collision
   // store particle index
   intersection.m_p = p.index;
 
-  // CONTACTS
-  // is the particle on the edge
-  if (pdota <= 0.0 && d < r + contactThres) {
-    // contact start edge
-    intersection.m_type = CONTACT;
-    if (d < r) {
-      // end cap contact
-      // set collision normal (negative of the axis)
-      intersection.m_normal = -axis / cylinderLen;
-      // compute distance from edge
-      intersection.m_distance = -sqrt(pdota);
-    }  else {
-      // contact with edge
-      // set collision normal (rejection vector)
-      intersection.m_normal = nprej;
-      // compute distance from edge
-      intersection.m_distance = -(d - r);
+  // determine if it is an end cap collision
+  vec3 pstart = p.position - start;
+  vec3 pend = p.position - end;
+  double pstartLen = pstart.Length();
+  double pendLen = pend.Length();
+  // simplify it as if it is in a sphere of radius r around start/end
+  // then it is and endcap collision
+  if (pstartLen < pendLen && pstartLen < r) {
+    // start cap collision
+    if (pdota < 0.0) {
+      intersection.m_type = CONTACT;
+    } else {
+      intersection.m_type = COLLISION;
     }
-    return true;
-  }
-  if (pdota >= sqcylinderLen && d < r + contactThres) {
-    // contact end edge
-    intersection.m_type = CONTACT;
-    if (d < r) {
-      // end cap contact
-      // set collision normal (positive of the axis)
-      intersection.m_normal = axis / cylinderLen;
-      // compute distance from edge
-      intersection.m_distance = -(sqrt(pdota) - cylinderLen);
-    }  else {
-      // contact with edge
-      // set collision normal (rejection vector)
-      intersection.m_normal = nprej;
-      // compute distance from edge
-      intersection.m_distance = -(d - r);
-    }
-    return true;
-  }
-  if (d > r) {
-    // contact wall
-    intersection.m_type = CONTACT;
 
-    // contact with edge
-    // set collision normal (rejection vector)
-    intersection.m_normal = nprej;
+    // set normal (negative of axis)
+    intersection.m_normal = -axis / cylinderLen;
     // compute distance from edge
-    intersection.m_distance = -(d - r);
+    intersection.m_distance = pproj.Length();
+    PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
+    return true;
+  } else if (pendLen < pstartLen && pendLen < r) {
+    // end cap collision
+    if (pdota > sqcylinderLen) {
+      intersection.m_type = CONTACT;
+    } else {
+      intersection.m_type = COLLISION;
+    }
 
+    // set normal (positive of axis)
+    intersection.m_normal = axis / cylinderLen;
+    // compute distance from edge
+    intersection.m_distance = -(pproj.Length() - cylinderLen);
+    //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
+    PRINT_NORMAL_DIST(pproj, intersection.m_distance);
     return true;
   }
 
-  printf("collision\n");
-  fflush(stdin);
-
-  // contact wall
-  intersection.m_type = COLLISION;
+  // collision with wall
+  if (d > r) {
+    intersection.m_type = CONTACT;
+  } else {
+    intersection.m_type = COLLISION;
+  }
 
   // contact with edge
   // set collision normal (rejection vector)
@@ -664,106 +655,6 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   intersection.m_distance = -(d - r);
 
   return true;
-
-
-
-
-
-
-  /*
-  // vector from start to p
-  vec3 start_p = p.position - cylinderStart;
-  double p_dot_a = Dot(start_p, cylinderAxis)/pow(cylinderLen,2);
-
-  // if dot product is negative it is below cylinder
-  if (p_dot_a < 0.0 - contactThres) {
-    return false;
-  }
-  // if dot product is greater than the length then it is above the cylinder
-  if (p_dot_a > cylinderLen + contactThres) {
-    return false;
-  }
-
-  // find rejection of p on the line
-  vec3 rp = start_p - p_dot_a * cylinderAxis; 
-  double d = rp.Length();
-
-  // if distance to the line is greater than the radius it is outside the cylinder
-  if (d > cylinderRadius + contactThres) { 
-    return false; 
-  }
-  
-
-  // There is a contact/collision
-  // store particle index
-  intersection.m_p = p.index;
-
-
-  // CONTACTS
-  // is the particle on the edge
-  if (p_dot_a <= 0.0 && d < cylinderRadius + contactThres) {
-    // contact start edge
-    intersection.m_type = CONTACT;
-    if (d < cylinderRadius) {
-      // end cap contact
-      // set collision normal (negative of the axis)
-      intersection.m_normal = -cylinderAxis / cylinderLen;
-      // compute distance from edge
-      intersection.m_distance = -p_dot_a;
-    }  else {
-      // contact with edge
-      // set collision normal (rejection vector)
-      intersection.m_normal = rp;
-      // compute distance from edge
-      intersection.m_distance = -(d - cylinderRadius);
-    }
-    return true;
-  }
-  if (p_dot_a >= cylinderLen && d < cylinderRadius + contactThres) {
-    // contact end edge
-    intersection.m_type = CONTACT;
-    if (d < cylinderRadius) {
-      // end cap contact
-      // set collision normal (positive of the axis)
-      intersection.m_normal = cylinderAxis / cylinderLen;
-      // compute distance from edge
-      intersection.m_distance = -(p_dot_a - cylinderLen);
-    }  else {
-      // contact with edge
-      // set collision normal (rejection vector)
-      intersection.m_normal = rp;
-      // compute distance from edge
-      intersection.m_distance = -(d - cylinderRadius);
-    }
-    return true;
-  }
-  if (d > cylinderRadius) {
-    // contact wall
-    intersection.m_type = CONTACT;
-
-    // contact with edge
-    // set collision normal (rejection vector)
-    intersection.m_normal = rp;
-    // compute distance from edge
-    intersection.m_distance = -(d - cylinderRadius);
-
-    return true;
-  }
-
-
-  // COLLISIONS
-
-  // contact wall
-  intersection.m_type = CONTACT;
-
-  // contact with edge
-  // set collision normal (rejection vector)
-  intersection.m_normal = rp;
-  // compute distance from edge
-  intersection.m_distance = -(d - cylinderRadius);
-
-  return true;
-  */
 }
 
 void JelloMesh::EulerIntegrate(double dt) {
