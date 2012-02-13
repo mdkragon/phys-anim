@@ -16,7 +16,7 @@ double JelloMesh::g_attachmentKd = 0.0;
 double JelloMesh::g_shearKs = 5000.0;
 double JelloMesh::g_shearKd = 10.0;
 double JelloMesh::g_bendKs = 10.0;
-double JelloMesh::g_bendKd = 0.5;
+double JelloMesh::g_bendKd = 1.5;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
 
@@ -622,7 +622,7 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
     intersection.m_normal = -axis / cylinderLen;
     // compute distance from edge
     intersection.m_distance = pproj.Length();
-    PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
+    //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
     return true;
   } else if (pendLen < pstartLen && pendLen < r) {
     // end cap collision
@@ -637,7 +637,7 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
     // compute distance from edge
     intersection.m_distance = -(pproj.Length() - cylinderLen);
     //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
-    PRINT_NORMAL_DIST(pproj, intersection.m_distance);
+    //PRINT_NORMAL_DIST(pproj, intersection.m_distance);
     return true;
   }
 
@@ -667,8 +667,8 @@ void JelloMesh::EulerIntegrate(double dt) {
         // get current particle
         Particle& p = GetParticle(particles, i,j,k);
 
-        vec3 accel = dt * p.force * (1/p.mass); 
-        vec3 vel = p.velocity + dt * accel;
+        vec3 dv = dt * p.force * (1/p.mass); 
+        vec3 vel = p.velocity + dv;
         vec3 pos = p.position + dt * p.velocity;
 
         p.velocity = vel;
@@ -691,8 +691,8 @@ void JelloMesh::MidPointIntegrate(double dt) {
         // get current particle
         Particle& p = GetParticle(particles, i,j,k);
 
-        vec3 accel = (dt/2) * p.force * (1/p.mass); 
-        vec3 vel = p.velocity + (dt/2) * accel;
+        vec3 dv = (dt/2) * p.force * (1/p.mass); 
+        vec3 vel = p.velocity + dv;
         vec3 pos = p.position + (dt/2) * p.velocity;
         
         // store new computed values in midpoint grid
