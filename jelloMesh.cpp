@@ -9,6 +9,17 @@
 #define PRINT_NORMAL_DIST(n, d) {printf("normal: (%0.3f, %0.3f, %0.3f) :: dist = %0.5f\n", n[0], n[1], n[2], d); fflush(stdout); }
 
 // GridSize = 6
+double JelloMesh::g_structuralKs = 4000.0; 
+double JelloMesh::g_structuralKd = 50.0; 
+double JelloMesh::g_attachmentKs = 0.0;
+double JelloMesh::g_attachmentKd = 0.0;
+double JelloMesh::g_shearKs = 3000.0;
+double JelloMesh::g_shearKd = 01.0;
+double JelloMesh::g_bendKs = 10.0;
+double JelloMesh::g_bendKd = 1.0;
+double JelloMesh::g_penaltyKs = 0.0;
+double JelloMesh::g_penaltyKd = 0.0;
+/* rk4
 double JelloMesh::g_structuralKs = 1000.0; 
 double JelloMesh::g_structuralKd = 1.0; 
 double JelloMesh::g_attachmentKs = 0.0;
@@ -19,9 +30,10 @@ double JelloMesh::g_bendKs = 10.0;
 double JelloMesh::g_bendKd = 1.5;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
+*/
 
 JelloMesh::JelloMesh() :     
-    m_integrationType(JelloMesh::RK4), m_drawflags(MESH | STRUCTURAL),
+    m_integrationType(JelloMesh::MIDPOINT), m_drawflags(MESH | STRUCTURAL),
     m_cols(0), m_rows(0), m_stacks(0), m_width(0.0), m_height(0.0), m_depth(0.0) {
   SetSize(1.0, 1.0, 1.0);
   SetGridSize(6, 6, 6);
@@ -169,7 +181,7 @@ void JelloMesh::InitJelloMesh() {
         z = rz;
 
         // translate off ground
-        y += 1.0;
+        y += 0.5;
         m_vparticles[i][j][k] = Particle(GetIndex(i,j,k), vec3(x, y, z), zero, mass);
       }
     }
@@ -713,8 +725,8 @@ void JelloMesh::MidPointIntegrate(double dt) {
         Particle& m = GetParticle(midpoint, i,j,k);
         Particle& p = GetParticle(particles, i,j,k);
 
-        vec3 accel = dt * m.force * (1/m.mass); 
-        vec3 vel = p.velocity + dt * accel;
+        vec3 dv = dt * m.force * (1/m.mass); 
+        vec3 vel = p.velocity + dv;
         vec3 pos = p.position + dt * m.velocity;
         
         // store final paritcle velocity and position
