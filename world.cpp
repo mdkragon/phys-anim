@@ -23,36 +23,29 @@ public:
 	}
 
 	/// Visit an element.
-	virtual bool VisitEnter( const TiXmlElement& element, const TiXmlAttribute* attribute)
-	{
-		if(element.ValueStr() == "world")
-		{
+	virtual bool VisitEnter( const TiXmlElement& element, const TiXmlAttribute* attribute) {
+		if(element.ValueStr() == "world") {
 			if(element.Parent() != element.GetDocument()) return false;
 			return true;
-		}
-		else if(element.ValueStr() == "materials")
-		{
+
+		} else if(element.ValueStr() == "materials") {
 			return true;
-		}
-		else if(element.ValueStr() == "material")
-		{
+
+		} else if(element.ValueStr() == "material") {
             return true;
-		}
-		else if(element.ValueStr() == "bodies")
-		{
+
+		} else if(element.ValueStr() == "bodies") {
 			if(element.Parent()->ValueStr() != "world") return false;
 			return true;
-		}
-		else if(element.ValueStr() == "ground")
-		{
+
+		} else if(element.ValueStr() == "ground") {
 			if(element.Parent()->ValueStr() != "bodies") return false;
 			assert(m_curBody == NULL);
 
             m_curBody = new World::Ground();
 			return true;
-		}
-		else if(element.ValueStr() == "box")
-		{
+
+		} else if(element.ValueStr() == "box") {
 			if(element.Parent()->ValueStr() != "bodies") return false;
 			assert(m_curBody == NULL);
 
@@ -64,27 +57,36 @@ public:
 			element.Attribute("hy", &hy);
 			element.Attribute("hz", &hz);
 
-            World::Cube* cube = new World::Cube();
-            cube->hx = hx;
-            cube->hy = hy;
-            cube->hz = hz;
-            m_curBody = cube;
+      World::Cube* cube = new World::Cube();
+      cube->hx = hx;
+      cube->hy = hy;
+      cube->hz = hz;
+      m_curBody = cube;
 			return true;
-		}
-		else if(element.ValueStr() == "sphere")
-		{
+
+		} else if(element.ValueStr() == "sphere") {
 			if(element.Parent()->ValueStr() != "bodies") return false;
 			assert(m_curBody == NULL);
 
 			double r = 1;		
 			element.Attribute("r", &r);
 
-            World::Sphere* sphere = new World::Sphere();
-            sphere->r = r;
-            m_curBody = sphere;
+      double x = 0.0;
+      double y = 0.0;
+      double z = 0.0;
+      element.Attribute("x", &x);
+      element.Attribute("y", &y);
+      element.Attribute("z", &z);
+
+      World::Sphere* sphere = new World::Sphere();
+      sphere->r = r;
+      sphere->pos = vec3(x,y,z);
+
+
+      m_curBody = sphere;
 			return true;
-		}
-		else if(element.ValueStr() == "cylinder") {
+
+		} else if(element.ValueStr() == "cylinder") {
 			if(element.Parent()->ValueStr() != "bodies") return false;
 			assert(m_curBody == NULL);
 
@@ -124,25 +126,19 @@ public:
 
 			m_curBody->pos = vec3(float(x), float(y), float(z));
 			return true;
-		}
-		else if(element.ValueStr() == "vel")
-		{
+
+		} else if(element.ValueStr() == "vel") {
             return false;
-		}
-		else if(element.ValueStr() == "ori")
-		{
+
+		} else if(element.ValueStr() == "ori") {
             return false;
-		}
-		else if(element.ValueStr() == "avel")
-		{
+
+		} else if(element.ValueStr() == "avel") {
             return false;
-		}
-		else if(element.ValueStr() == "bodymaterial")
-		{
+		} else if(element.ValueStr() == "bodymaterial") {
             return false;
-		}
-		else
-		{
+
+		} else {
 			return false;
 		}
 
@@ -257,7 +253,7 @@ void World::Draw()
             Sphere* c = (Sphere*) m_shapes[i];
             glPushMatrix();
             glTranslatef(pos[0], pos[1], pos[2]);
-	        glutSolidSphere(c->r, 20, 20);   
+            glutSolidSphere(c->r, 20, 20);   
             glPopMatrix();
         }
         else if (m_shapes[i]->GetType() == CUBE)

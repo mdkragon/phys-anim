@@ -9,16 +9,30 @@
 #define PRINT_NORMAL_DIST(n, d) {printf("normal: (%0.3f, %0.3f, %0.3f) :: dist = %0.5f\n", n[0], n[1], n[2], d); fflush(stdout); }
 
 // GridSize = 6
-double JelloMesh::g_structuralKs = 4000.0; 
-double JelloMesh::g_structuralKd = 50.0; 
+/*
+double JelloMesh::g_structuralKs = 4100.0; 
+double JelloMesh::g_structuralKd = 30.0; 
+double JelloMesh::g_attachmentKs = 0.0;
+double JelloMesh::g_attachmentKd = 0.0;
+double JelloMesh::g_shearKs = 100.0;
+double JelloMesh::g_shearKd = 1.0;
+double JelloMesh::g_bendKs = 00.0;
+double JelloMesh::g_bendKd = 0.0;
+double JelloMesh::g_penaltyKs = 0.0;
+double JelloMesh::g_penaltyKd = 0.0;
+*/
+/* mid
+double JelloMesh::g_structuralKs = 3000.0; 
+double JelloMesh::g_structuralKd = 20.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
 double JelloMesh::g_shearKs = 3000.0;
-double JelloMesh::g_shearKd = 01.0;
+double JelloMesh::g_shearKd = 10.0;
 double JelloMesh::g_bendKs = 10.0;
-double JelloMesh::g_bendKd = 1.0;
+double JelloMesh::g_bendKd = 0.1;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
+*/
 /* rk4
 double JelloMesh::g_structuralKs = 1000.0; 
 double JelloMesh::g_structuralKd = 1.0; 
@@ -31,9 +45,19 @@ double JelloMesh::g_bendKd = 1.5;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
 */
+double JelloMesh::g_structuralKs = 1000.0; 
+double JelloMesh::g_structuralKd = 1.0; 
+double JelloMesh::g_attachmentKs = 0.0;
+double JelloMesh::g_attachmentKd = 0.0;
+double JelloMesh::g_shearKs = 5000.0;
+double JelloMesh::g_shearKd = 10.0;
+double JelloMesh::g_bendKs = 10.0;
+double JelloMesh::g_bendKd = 1.5;
+double JelloMesh::g_penaltyKs = 0.0;
+double JelloMesh::g_penaltyKd = 0.0;
 
 JelloMesh::JelloMesh() :     
-    m_integrationType(JelloMesh::MIDPOINT), m_drawflags(MESH | STRUCTURAL),
+    m_integrationType(JelloMesh::RK4), m_drawflags(MESH | STRUCTURAL),
     m_cols(0), m_rows(0), m_stacks(0), m_width(0.0), m_height(0.0), m_depth(0.0) {
   SetSize(1.0, 1.0, 1.0);
   SetGridSize(6, 6, 6);
@@ -175,10 +199,12 @@ void JelloMesh::InitJelloMesh() {
         float z = -m_depth*0.5f + dcellsize*k;
  
         // rotate about x
+        /*
         float ry = y * cos(M_PI/4) - z * sin(M_PI/4);
         float rz = y * sin(M_PI/4) + z * cos(M_PI/4);
         y = ry;
         z = rz;
+        */
 
         // translate off ground
         y += 0.5;
@@ -186,6 +212,9 @@ void JelloMesh::InitJelloMesh() {
       }
     }
   }
+
+  // store copy of particles as previous
+  m_vparticlesPrev = m_vparticles;
 
 
   ParticleGrid& g = m_vparticles;
@@ -439,6 +468,9 @@ void JelloMesh::Update(double dt, const World& world, const vec3& externalForces
     case RK4: 
       RK4Integrate(dt); 
       break;
+    case VERLET: 
+      VerletIntegrate(dt); 
+      break;
   }
 }
 
@@ -457,6 +489,12 @@ void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
 
           if (world.m_shapes[i]->GetType() == World::CYLINDER 
               && CylinderIntersection(p, (World::Cylinder*) world.m_shapes[i], intersection)) {
+            m_vcontacts.push_back(intersection);
+            if (intersection.m_type == COLLISION) {
+              m_vcollisions.push_back(intersection);
+            }
+          } else if (world.m_shapes[i]->GetType() == World::SPHERE
+              && SphereIntersection(p, (World::Sphere*) world.m_shapes[i], intersection)) {
             m_vcontacts.push_back(intersection);
             if (intersection.m_type == COLLISION) {
               m_vcollisions.push_back(intersection);
@@ -575,6 +613,38 @@ bool JelloMesh::FloorIntersection(Particle& p, Intersection& intersection) {
   intersection.m_normal = vec3(0, 1, 0);
   // compute distance from edge
   intersection.m_distance = -p.position[1];
+
+
+  return true;
+}
+
+
+bool JelloMesh::SphereIntersection(Particle& p, World::Sphere* sphere, JelloMesh::Intersection& intersection) {
+  // test if point is intersecting with the floor
+  // up direction is Y and floor is at Y = 0;
+  float contactThres = 0.01;
+
+  double r = sphere->r;
+  double d = (p.position - sphere->pos).Length();
+
+  if (d > r + contactThres) {
+    return false;
+  } 
+  if (d > r) {
+    // CONTACT
+    intersection.m_type = CONTACT;
+  } else {
+    // COLLISION
+    intersection.m_type = COLLISION;
+  }
+
+  // store particle index
+  intersection.m_p = p.index;
+  // set collision normal
+  // for floor it is just up vector
+  intersection.m_normal = (p.position - sphere->pos).Normalize();
+  // compute distance from edge
+  intersection.m_distance = r - d;
 
 
   return true;
@@ -851,6 +921,35 @@ void JelloMesh::RK4Integrate(double dt) {
             }
         }
     }
+}
+
+void JelloMesh::VerletIntegrate(double dt) {
+  ParticleGrid& particles = m_vparticles;  // source is a ptr!
+  ParticleGrid& prev = m_vparticlesPrev;  // source is a ptr!
+
+  // store copy of current paritcles
+  ParticleGrid currParticles = m_vparticles;
+
+  // Step 1
+  for (int i = 0; i < m_rows+1; i++) {
+    for (int j = 0; j < m_cols+1; j++) {
+      for (int k = 0; k < m_stacks+1; k++) {
+        // get previous particle
+        Particle& pp = GetParticle(prev, i,j,k);
+        // get current particle
+        Particle& cp = GetParticle(particles, i,j,k);
+
+        // compute central difference
+        vec3 a = cp.force * (1/cp.mass);
+        vec3 npos = 2 * cp.position - pp.position + a * pow(dt,2);
+
+        cp.position = npos;
+      }
+    }
+  }
+
+  // set previous particles 
+  m_vparticlesPrev = currParticles;
 }
 
 

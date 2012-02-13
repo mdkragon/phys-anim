@@ -33,7 +33,7 @@ class JelloMesh {
     virtual float GetDepth() const;
 
     // Set/Get our numerical integration type
-    enum IntegrationType { EULER, MIDPOINT, RK4 };
+    enum IntegrationType { EULER, MIDPOINT, RK4, VERLET };
     virtual void SetIntegrationType(IntegrationType type);
     virtual IntegrationType GetIntegrationType() const;
 
@@ -46,7 +46,6 @@ class JelloMesh {
 
     int GetIndex(int i, int j, int k) const;
     void GetCell(int idx, int& i, int &j, int &k) const;
-
 
   protected:
 
@@ -76,11 +75,13 @@ class JelloMesh {
     virtual void ResolveContacts(ParticleGrid& grid);
     virtual bool FloorIntersection(Particle& p, Intersection& intersection);
     virtual bool CylinderIntersection(Particle& p, World::Cylinder* cylinder, Intersection& intersection);
+    virtual bool SphereIntersection(Particle& p, World::Sphere* shpere, Intersection& intersection);
 
     virtual void ComputeForces(ParticleGrid& grid);
     virtual void EulerIntegrate(double dt);
     virtual void MidPointIntegrate(double dt);
     virtual void RK4Integrate(double dt);
+    virtual void VerletIntegrate(double dt);
 
     enum Face {
       XLEFT, 
@@ -120,6 +121,7 @@ class JelloMesh {
     IntegrationType m_integrationType;
     std::vector<FaceMesh> m_mesh;
     ParticleGrid m_vparticles;
+    ParticleGrid m_vparticlesPrev;
 
     std::vector<Spring> m_vsprings;
     std::vector<Intersection> m_vcontacts;

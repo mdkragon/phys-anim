@@ -16,7 +16,8 @@
 
 JelloMesh theJello;
 Camera theCamera;
-World theWorld("worlds/ground.xml");
+//World theWorld("worlds/ground.xml");
+World theWorld("worlds/sphere.xml");
 //World theWorld("worlds/cylinder.xml");
 //World theWorld("worlds/upright_cylinder.xml");
 //World theWorld("worlds/tilt_cylinder.xml");
@@ -143,6 +144,7 @@ void onKeyboardCb(unsigned char key, int x, int y)
    else if (key == '8') theJello.SetIntegrationType(JelloMesh::EULER);
    else if (key == '9') theJello.SetIntegrationType(JelloMesh::MIDPOINT);
    else if (key == '0') theJello.SetIntegrationType(JelloMesh::RK4);
+   else if (key == '-') theJello.SetIntegrationType(JelloMesh::VERLET);
    else if (key == '>') isRunning = true;
    else if (key == '=') isRunning = false;
    else if (key == '<') theJello.Reset();
@@ -226,6 +228,7 @@ void drawOverlay()
      case JelloMesh::EULER: intstr = "Euler"; break;
      case JelloMesh::MIDPOINT: intstr = "Midpoint"; break;
      case JelloMesh::RK4: intstr = "RK4"; break;
+     case JelloMesh::VERLET: intstr = "Verlet"; break;
      }
 
      char info[1024];
@@ -342,6 +345,7 @@ int main(int argc, char **argv)
     glutAddMenuEntry("Euler\t'8'", '8');
     glutAddMenuEntry("Midpoint\t'9'", '9');
     glutAddMenuEntry("RK4\t'0'", '0');
+    glutAddMenuEntry("Verlet\t'-'", '-');
 
     int displayMenu = glutCreateMenu(onMenuCb);
     glutAddMenuEntry("Mesh\t'1'", '1');
