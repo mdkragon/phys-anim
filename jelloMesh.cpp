@@ -10,18 +10,18 @@
 
 // GridSize = 6
 /*
-double JelloMesh::g_structuralKs = 3500.0; 
-double JelloMesh::g_structuralKd = 30.0; 
+double JelloMesh::g_structuralKs = 4000.0; 
+double JelloMesh::g_structuralKd = 60.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 000.0;
-double JelloMesh::g_shearKd = 0.0;
-double JelloMesh::g_bendKs = 00.0;
-double JelloMesh::g_bendKd = 0.0;
-double JelloMesh::g_penaltyKs = 0.0;
-double JelloMesh::g_penaltyKd = 0.0;
+double JelloMesh::g_shearKs = 5000.0;
+double JelloMesh::g_shearKd = 001.0;
+double JelloMesh::g_bendKs = 500.0;
+double JelloMesh::g_bendKd = 10.0;
+double JelloMesh::g_penaltyKs = 50000.0;
+double JelloMesh::g_penaltyKd = 40.0;
 */
-/* mid
+///* mid
 double JelloMesh::g_structuralKs = 3000.0; 
 double JelloMesh::g_structuralKd = 20.0; 
 double JelloMesh::g_attachmentKs = 0.0;
@@ -30,9 +30,9 @@ double JelloMesh::g_shearKs = 3000.0;
 double JelloMesh::g_shearKd = 10.0;
 double JelloMesh::g_bendKs = 10.0;
 double JelloMesh::g_bendKd = 0.1;
-double JelloMesh::g_penaltyKs = 0.0;
-double JelloMesh::g_penaltyKd = 0.0;
-*/
+double JelloMesh::g_penaltyKs = 40000.0;
+double JelloMesh::g_penaltyKd = 40.0;
+//*/
 /* rk4
 double JelloMesh::g_structuralKs = 1000.0; 
 double JelloMesh::g_structuralKd = 1.0; 
@@ -45,16 +45,18 @@ double JelloMesh::g_bendKd = 1.5;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
 */
+/*
 double JelloMesh::g_structuralKs = 1000.0; 
 double JelloMesh::g_structuralKd = 1.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
 double JelloMesh::g_shearKs = 5000.0;
 double JelloMesh::g_shearKd = 10.0;
-double JelloMesh::g_bendKs = 10.0;
+double 0elloMesh::g_bendKs = 10.0;
 double JelloMesh::g_bendKd = 1.5;
 double JelloMesh::g_penaltyKs = 0.0;
 double JelloMesh::g_penaltyKd = 0.0;
+*/
 
 JelloMesh::JelloMesh() :     
     m_integrationType(JelloMesh::RK4), m_drawflags(MESH | STRUCTURAL),
@@ -399,10 +401,24 @@ void JelloMesh::DrawCollisionNormals() {
 
     const Particle& pt = GetParticle(g, intersection.m_p);
     vec3 normal = intersection.m_normal;
-    vec3 end = pt.position + 0.2 * normal;
+    vec3 end = pt.position + 1.0 * normal;
     glVertex3f(pt.position[0], pt.position[1], pt.position[2]);
     glVertex3f(end[0], end[1], end[2]);
   }     
+  /*
+  for(unsigned int i = 0; i < m_vcontacts.size(); i++) {
+    Intersection intersection = m_vcontacts[i];
+    if (isInterior(intersection.m_p)) {
+      continue;
+    }
+
+    const Particle& pt = GetParticle(g, intersection.m_p);
+    vec3 normal = intersection.m_normal;
+    vec3 end = pt.position + 1.0 * normal;
+    glVertex3f(pt.position[0], pt.position[1], pt.position[2]);
+    glVertex3f(end[0], end[1], end[2]);
+  }     
+  */
   glEnd();
 }
 
@@ -455,8 +471,12 @@ void JelloMesh::Update(double dt, const World& world, const vec3& externalForces
 
 	CheckForCollisions(m_vparticles, world);
 	ComputeForces(m_vparticles);
+  /*
 	ResolveCollisions(m_vparticles);
 	ResolveContacts(m_vparticles);
+  */
+	ResolveContacts2(m_vparticles);
+	ResolveCollisions2(m_vparticles);
 
   switch (m_integrationType) {
     case EULER: 
@@ -489,20 +509,30 @@ void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
 
           if (world.m_shapes[i]->GetType() == World::CYLINDER 
               && CylinderIntersection(p, (World::Cylinder*) world.m_shapes[i], intersection)) {
-            m_vcontacts.push_back(intersection);
-            if (intersection.m_type == COLLISION) {
+            if (intersection.m_type == CONTACT) {
+              m_vcontacts.push_back(intersection);
+            } else if (intersection.m_type == COLLISION) {
               m_vcollisions.push_back(intersection);
             }
           } else if (world.m_shapes[i]->GetType() == World::SPHERE
               && SphereIntersection(p, (World::Sphere*) world.m_shapes[i], intersection)) {
-            m_vcontacts.push_back(intersection);
-            if (intersection.m_type == COLLISION) {
+            if (intersection.m_type == CONTACT) {
+              m_vcontacts.push_back(intersection);
+            } else if (intersection.m_type == COLLISION) {
+              m_vcollisions.push_back(intersection);
+            }
+          } else if (world.m_shapes[i]->GetType() == World::CUBE
+              && CubeIntersection(p, (World::Cube*) world.m_shapes[i], intersection)) {
+            if (intersection.m_type == CONTACT) {
+              m_vcontacts.push_back(intersection);
+            } else if (intersection.m_type == COLLISION) {
               m_vcollisions.push_back(intersection);
             }
           } else if (world.m_shapes[i]->GetType() == World::GROUND 
                       && FloorIntersection(p, intersection)) {
-            m_vcontacts.push_back(intersection);
-            if (intersection.m_type == COLLISION) {
+            if (intersection.m_type == CONTACT) {
+              m_vcontacts.push_back(intersection);
+            } else if (intersection.m_type == COLLISION) {
               m_vcollisions.push_back(intersection);
             }
           }
@@ -510,6 +540,7 @@ void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
       }
     }
   }
+  sleep(0.2);
 }
 
 void JelloMesh::ComputeForces(ParticleGrid& grid) {
@@ -599,14 +630,27 @@ void JelloMesh::ResolveContacts2(ParticleGrid& grid) {
 
     double vdotn = Dot(p.velocity, normal);
 
-    // reflect particle based on collision normal
-    // project velocity onto normal
-    vec3 Nproj = vdotn * normal;
-    // reflect velocity (factor in bounciness of object, coefficient of restitution)
-    vec3 vprime = p.velocity - 2 * Nproj * coefOfRestitution;
+    if (vdotn < 0) {
+      // reflect particle based on collision normal
+      // project velocity onto normal
+      vec3 Nproj = vdotn * normal;
+      // reflect velocity (factor in bounciness of object, coefficient of restitution)
+      vec3 vprime = p.velocity - 2 * Nproj * coefOfRestitution;
 
-    // set particles velocity
-    p.velocity = vprime;
+      // set particles velocity
+      p.velocity = vprime;
+    }
+
+    // subtract out force into obstacle
+    double ndotf = Dot(normal, p.force);
+    if (ndotf < 0) {
+      vec3 forceProj = ndotf * normal;
+      p.force += forceProj;
+    }
+    /*
+    vec3 forceProj = ndotf * normal;
+    p.force -= forceProj;
+    */
   }
 }
 
@@ -616,6 +660,27 @@ void JelloMesh::ResolveCollisions2(ParticleGrid& grid) {
     Particle& pt = GetParticle(grid, result.m_p);
     vec3 normal = result.m_normal;
     float dist = result.m_distance;
+
+    // for now just move the particle to surface
+    //pt.position += dist * normal;
+    // add penalty force
+
+    // calculate spring force from hooks law
+    // F = -(ks * (|l| - r) + kd * (ldot*l)/|l|) * (l/|l|)
+    // l = a-b
+    // ldot = va - vb
+    vec3 l = normal;
+    double llen = l.Length();
+
+    // proportional term
+    double prop = g_penaltyKs * (-dist);
+    // damping force
+    double damp = g_penaltyKd * (Dot(-pt.velocity, l)/llen);
+    // combined force
+    vec3 force = -(prop + damp) * (l/llen);
+
+    // Fa = f; Fb = -Fa;
+    pt.force += force;
 
     // for now just move the particle to surface
     pt.position += dist * normal;
@@ -648,6 +713,54 @@ bool JelloMesh::FloorIntersection(Particle& p, Intersection& intersection) {
 
   return true;
 }
+
+bool JelloMesh::CubeIntersection(Particle& p, World::Cube* cube, JelloMesh::Intersection& intersection) {
+  // test if point is intersecting with a box
+  float contactThres = 0.01;
+
+  // only supports boxes aligned with the world axes
+  vec3 sideHalfLen = vec3(cube->hx, cube->hy, cube->hz);
+  // vector from particle to box center
+  vec3 d = p.position - cube->pos;
+
+  // outside box?
+  if (abs(d[0]) > sideHalfLen[0] + contactThres
+      || abs(d[1]) > sideHalfLen[1] + contactThres
+      || abs(d[2]) > sideHalfLen[2] + contactThres) {
+    return false;
+  }
+
+  // determine closest wall
+  double ax = abs(abs(d[0]) - sideHalfLen[0]);
+  double ay = abs(abs(d[1]) - sideHalfLen[1]);
+  double az = abs(abs(d[2]) - sideHalfLen[2]);
+  int aind = 0;
+  if (ay < ax && ay < az) {
+    aind = 1;
+  } else if (az < ax && az < ay) {
+    aind = 2;
+  }
+
+  // collsion or contact
+  if (abs(d[aind]) - sideHalfLen[aind] > 0.0) {
+    // CONTACT
+    intersection.m_type = CONTACT;
+  } else {
+    // COLLISION
+    intersection.m_type = COLLISION;
+  }
+
+  // store particle index
+  intersection.m_p = p.index;
+  // determine wall normal
+  intersection.m_normal = vec3(0,0,0);
+  intersection.m_normal[aind] = -d[aind]/abs(d[aind]);
+  // compute distance from edge
+  intersection.m_distance = abs(d[aind]) - sideHalfLen[aind];
+
+  return true;
+}
+
 
 
 bool JelloMesh::SphereIntersection(Particle& p, World::Sphere* sphere, JelloMesh::Intersection& intersection) {
@@ -701,12 +814,28 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   double d = prej.Length();
   vec3 nprej = prej / d;
 
+  int i, j, k;
+  GetCell(p.index, i, j, k); 
+
   // if p is outside the radius then no contact
   if (d > r + contactThres) {
+    /*
+    if (abs(p.position[0]) <= 0.3 && p.position[1] <= 0.4 && abs(p.position[2]) <= 0.4) {
+      printf("p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) outside radius, d: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], d);
+      printf("proj:(%0.3f,%0.3f,%0.3f):rej:(%0.3f,%0.3f,%0.3f)\n", pproj[0], pproj[1], pproj[2], prej[0], prej[1], prej[2]);
+      fflush(stdout);
+    }
+    */
     return false;
   }
   // is p outside end caps
-  if (pdota < 0.0 - contactThres || pdota > cylinderLen + contactThres) {
+  if (pdota < 0.0 - 2*contactThres + pow(contactThres,2) || pdota > sqcylinderLen + 2*contactThres*cylinderLen + pow(contactThres,2)) {
+    /*
+    if (abs(p.position[0]) <= 0.3 && p.position[1] <= 0.4) {
+      printf("p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) outside endcap, pdota: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], pdota);
+      fflush(stdout);
+    }
+    */
     return false;
   }
 
@@ -721,37 +850,43 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   vec3 pend = p.position - end;
   double pstartLen = pstart.Length();
   double pendLen = pend.Length();
+
   // simplify it as if it is in a sphere of radius r around start/end
   // then it is and endcap collision
-  if (pstartLen < pendLen && pstartLen < r) {
-    // start cap collision
-    if (pdota < 0.0) {
-      intersection.m_type = CONTACT;
-    } else {
-      intersection.m_type = COLLISION;
-    }
+  if (pdota < 0.0 + 10*contactThres || pdota > cylinderLen - 10*contactThres) {
+    if (pstartLen < pendLen && pstartLen < r) {
+      // start cap collision
+      int distsign = +1;
+      if (pdota < 0.0) {
+        intersection.m_type = CONTACT;
+        distsign = -1;
+      } else {
+        intersection.m_type = COLLISION;
+        distsign = +1;
+      }
 
-    // set normal (negative of axis)
-    intersection.m_normal = -axis / cylinderLen;
-    // compute distance from edge
-    intersection.m_distance = pproj.Length();
-    //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
-    return true;
-  } else if (pendLen < pstartLen && pendLen < r) {
-    // end cap collision
-    if (pdota > sqcylinderLen) {
-      intersection.m_type = CONTACT;
-    } else {
-      intersection.m_type = COLLISION;
-    }
+      // set normal (negative of axis)
+      intersection.m_normal = -axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = distsign * pproj.Length();
+      //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
+      return true;
+    } else if (pendLen < pstartLen && pendLen < r) {
+      // end cap collision
+      if (pdota > sqcylinderLen) {
+        intersection.m_type = CONTACT;
+      } else {
+        intersection.m_type = COLLISION;
+      }
 
-    // set normal (positive of axis)
-    intersection.m_normal = axis / cylinderLen;
-    // compute distance from edge
-    intersection.m_distance = -(pproj.Length() - cylinderLen);
-    //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
-    //PRINT_NORMAL_DIST(pproj, intersection.m_distance);
-    return true;
+      // set normal (positive of axis)
+      intersection.m_normal = axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -(pproj.Length() - cylinderLen);
+      //PRINT_NORMAL_DIST(intersection.m_normal, intersection.m_distance);
+      //PRINT_NORMAL_DIST(pproj, intersection.m_distance);
+      return true;
+    }
   }
 
   // collision with wall
@@ -766,6 +901,13 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   intersection.m_normal = nprej;
   // compute distance from edge
   intersection.m_distance = -(d - r);
+
+  /*
+  printf("******** p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) wall collision, pdota: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], pdota);
+  printf("******** proj:(%0.3f,%0.3f,%0.3f):rej:(%0.3f,%0.3f,%0.3f)\n", pproj[0], pproj[1], pproj[2], nprej[0], nprej[1], nprej[2]);
+  fflush(stdout);
+  */
+
 
   return true;
 }
