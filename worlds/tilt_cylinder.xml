@@ -11,7 +11,9 @@
 
 
 
-    <cylinder r="0.4" sx="00.3" sy="0.2" sz="0.00" ex="-0.30" ey="-0.2" ez="0.00"></cylinder>
+    <!--<cylinder r="0.4" sx="00.3" sy="0.2" sz="0.00" ex="-0.30" ey="-0.2" ez="0.00"></cylinder>-->
+    <!--<cylinder r="0.4" sx="00.3" sy="0.0" sz="0.00" ex="-0.30" ey="-0.0" ez="0.00"></cylinder>-->
+    <box hx="1" hy="0.2" hz="1" x="-0.80" y="0" z="0"></box>
     <sphere r="0.4" x="3" y=".0" z="0"></sphere>
   </bodies>
 </world>

@@ -57,10 +57,18 @@ public:
 			element.Attribute("hy", &hy);
 			element.Attribute("hz", &hz);
 
+      double x = 0.0;
+      double y = 0.0;
+      double z = 0.0;
+      element.Attribute("x", &x);
+      element.Attribute("y", &y);
+      element.Attribute("z", &z);
+
       World::Cube* cube = new World::Cube();
       cube->hx = hx;
       cube->hy = hy;
       cube->hz = hz;
+      cube->pos = vec3(x,y,z);
       m_curBody = cube;
 			return true;
 
@@ -262,7 +270,7 @@ void World::Draw()
             glPushMatrix();
             glTranslatef(pos[0], pos[1], pos[2]);
             glScalef(c->hx*2, c->hy*2, c->hz*2);
-	        glutSolidCube(1.0);   
+            glutSolidCube(1.0);   
             glPopMatrix();
         }
         else if (m_shapes[i]->GetType() == CYLINDER)
