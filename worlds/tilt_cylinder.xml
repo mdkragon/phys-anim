@@ -12,6 +12,7 @@
 
 
     <cylinder r="0.4" sx="00.3" sy="0.2" sz="0.00" ex="-0.30" ey="-0.2" ez="0.00"></cylinder>
+    <sphere r="0.4" x="3" y=".0" z="0"></sphere>
   </bodies>
 </world>
 

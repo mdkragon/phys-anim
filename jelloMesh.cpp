@@ -10,12 +10,12 @@
 
 // GridSize = 6
 /*
-double JelloMesh::g_structuralKs = 4100.0; 
+double JelloMesh::g_structuralKs = 3500.0; 
 double JelloMesh::g_structuralKd = 30.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 100.0;
-double JelloMesh::g_shearKd = 1.0;
+double JelloMesh::g_shearKs = 000.0;
+double JelloMesh::g_shearKd = 0.0;
 double JelloMesh::g_bendKs = 00.0;
 double JelloMesh::g_bendKd = 0.0;
 double JelloMesh::g_penaltyKs = 0.0;
@@ -455,8 +455,8 @@ void JelloMesh::Update(double dt, const World& world, const vec3& externalForces
 
 	CheckForCollisions(m_vparticles, world);
 	ComputeForces(m_vparticles);
-	ResolveContacts(m_vparticles);
 	ResolveCollisions(m_vparticles);
+	ResolveContacts(m_vparticles);
 
   switch (m_integrationType) {
     case EULER: 
@@ -583,11 +583,42 @@ void JelloMesh::ResolveCollisions(ParticleGrid& grid) {
 
     // for now just move the particle to surface
     pt.position += dist * normal;
+	}
+}
 
-    // TODO: better collision handling?
-    // penalty force?
-    // spring force to pull particle out of collision
-    //pt.force += 100000 * dist * normal;
+void JelloMesh::ResolveContacts2(ParticleGrid& grid) {
+  // coefficient of restitution [0.0 - 1.0]
+  // 1 - perfect bounciness (no loss of energy)
+  // 0 - no bounciness (hit and stick)
+  double coefOfRestitution = 0.8;
+
+  for (unsigned int i = 0; i < m_vcontacts.size(); i++) {
+    const Intersection& contact = m_vcontacts[i];
+    Particle& p = GetParticle(grid, contact.m_p);
+    vec3 normal = contact.m_normal; 
+
+    double vdotn = Dot(p.velocity, normal);
+
+    // reflect particle based on collision normal
+    // project velocity onto normal
+    vec3 Nproj = vdotn * normal;
+    // reflect velocity (factor in bounciness of object, coefficient of restitution)
+    vec3 vprime = p.velocity - 2 * Nproj * coefOfRestitution;
+
+    // set particles velocity
+    p.velocity = vprime;
+  }
+}
+
+void JelloMesh::ResolveCollisions2(ParticleGrid& grid) {
+  for(unsigned int i = 0; i < m_vcollisions.size(); i++) {
+    Intersection result = m_vcollisions[i];
+    Particle& pt = GetParticle(grid, result.m_p);
+    vec3 normal = result.m_normal;
+    float dist = result.m_distance;
+
+    // for now just move the particle to surface
+    pt.position += dist * normal;
 	}
 }
 

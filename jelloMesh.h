@@ -73,6 +73,8 @@ class JelloMesh {
     virtual void CheckForCollisions(ParticleGrid& grid, const World& world);
     virtual void ResolveCollisions(ParticleGrid& grid);
     virtual void ResolveContacts(ParticleGrid& grid);
+    virtual void ResolveCollisions2(ParticleGrid& grid);
+    virtual void ResolveContacts2(ParticleGrid& grid);
     virtual bool FloorIntersection(Particle& p, Intersection& intersection);
     virtual bool CylinderIntersection(Particle& p, World::Cylinder* cylinder, Intersection& intersection);
     virtual bool SphereIntersection(Particle& p, World::Sphere* shpere, Intersection& intersection);
