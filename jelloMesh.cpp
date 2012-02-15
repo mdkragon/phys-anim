@@ -209,7 +209,7 @@ void JelloMesh::InitJelloMesh() {
         */
 
         // translate off ground
-        y += 0.5;
+        y += 1.5;
         m_vparticles[i][j][k] = Particle(GetIndex(i,j,k), vec3(x, y, z), zero, mass);
       }
     }
@@ -401,7 +401,7 @@ void JelloMesh::DrawCollisionNormals() {
 
     const Particle& pt = GetParticle(g, intersection.m_p);
     vec3 normal = intersection.m_normal;
-    vec3 end = pt.position + 1.0 * normal;
+    vec3 end = pt.position + 0.3 * normal;
     glVertex3f(pt.position[0], pt.position[1], pt.position[2]);
     glVertex3f(end[0], end[1], end[2]);
   }     
@@ -508,7 +508,7 @@ void JelloMesh::CheckForCollisions(ParticleGrid& grid, const World& world) {
           Intersection intersection;
 
           if (world.m_shapes[i]->GetType() == World::CYLINDER 
-              && CylinderIntersection(p, (World::Cylinder*) world.m_shapes[i], intersection)) {
+              && CylinderIntersection2(p, (World::Cylinder*) world.m_shapes[i], intersection)) {
             if (intersection.m_type == CONTACT) {
               m_vcontacts.push_back(intersection);
             } else if (intersection.m_type == COLLISION) {
@@ -656,14 +656,25 @@ void JelloMesh::ResolveContacts2(ParticleGrid& grid) {
 
 void JelloMesh::ResolveCollisions2(ParticleGrid& grid) {
   for(unsigned int i = 0; i < m_vcollisions.size(); i++) {
+    double coefOfRestitution = 0.8;
     Intersection result = m_vcollisions[i];
     Particle& pt = GetParticle(grid, result.m_p);
     vec3 normal = result.m_normal;
     float dist = result.m_distance;
 
-    // for now just move the particle to surface
-    //pt.position += dist * normal;
-    // add penalty force
+    double vdotn = Dot(pt.velocity, normal);
+
+    if (vdotn < 0) {
+      // reflect particle based on collision normal
+      // project velocity onto normal
+      vec3 Nproj = vdotn * normal;
+      // reflect velocity (factor in bounciness of object, coefficient of restitution)
+      vec3 vprime = pt.velocity - 2 * Nproj * coefOfRestitution;
+
+      // set particles velocity
+      pt.velocity = vprime;
+    }
+
 
     // calculate spring force from hooks law
     // F = -(ks * (|l| - r) + kd * (ldot*l)/|l|) * (l/|l|)
@@ -680,10 +691,10 @@ void JelloMesh::ResolveCollisions2(ParticleGrid& grid) {
     vec3 force = -(prop + damp) * (l/llen);
 
     // Fa = f; Fb = -Fa;
-    pt.force += force;
+    pt.force = force;
 
     // for now just move the particle to surface
-    pt.position += dist * normal;
+    //pt.position += dist * normal;
 	}
 }
 
@@ -799,18 +810,22 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   vec3 end = cylinder->end;
   vec3 axis = end - start;
   double r = cylinder->r; 
-  double cylinderLen = cylinder->len; 
-  double sqcylinderLen = cylinder->sqlen; 
+  double cylinderLen = axis.Length();
+  double sqcylinderLen = axis.SqrLength();
+
   // normalized axis
   vec3 naxis = axis / cylinderLen;
 
   double contactThres = 0.01;
+  double sqLenPlusContact = pow((cylinderLen + contactThres),2);
 
   // projection of p onto cylinder axis
   double pdota = Dot((p.position - start), naxis);
   vec3 pproj = pdota * naxis;
+  double projLen = pproj.Length();
   // rejection of p from cylinder axis
   vec3 prej = (p.position - start) - pproj;
+  // d is the distance from the particle to the axis
   double d = prej.Length();
   vec3 nprej = prej / d;
 
@@ -819,27 +834,12 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
 
   // if p is outside the radius then no contact
   if (d > r + contactThres) {
-    /*
-    if (abs(p.position[0]) <= 0.3 && p.position[1] <= 0.4 && abs(p.position[2]) <= 0.4) {
-      printf("p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) outside radius, d: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], d);
-      printf("proj:(%0.3f,%0.3f,%0.3f):rej:(%0.3f,%0.3f,%0.3f)\n", pproj[0], pproj[1], pproj[2], prej[0], prej[1], prej[2]);
-      fflush(stdout);
-    }
-    */
     return false;
   }
-  // is p outside end caps
-  if (pdota < 0.0 - 2*contactThres + pow(contactThres,2) || pdota > sqcylinderLen + 2*contactThres*cylinderLen + pow(contactThres,2)) {
-    /*
-    if (abs(p.position[0]) <= 0.3 && p.position[1] <= 0.4) {
-      printf("p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) outside endcap, pdota: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], pdota);
-      fflush(stdout);
-    }
-    */
+  // is p outside end caps if pdota is greater than the square of the length or negative
+  if (pdota < 0.0 - pow(contactThres,2) || pdota > sqLenPlusContact) {
     return false;
   }
-
-  //printf("pdota: %f: sqLen: %f: len: %f\n", pdota, sqcylinderLen, cylinderLen);
 
   // There is a contact/collision
   // store particle index
@@ -853,7 +853,7 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
 
   // simplify it as if it is in a sphere of radius r around start/end
   // then it is and endcap collision
-  if (pdota < 0.0 + 10*contactThres || pdota > cylinderLen - 10*contactThres) {
+  if (projLen < 0.0 + 10*contactThres || pdota > cylinderLen - 10*contactThres) {
     if (pstartLen < pendLen && pstartLen < r) {
       // start cap collision
       int distsign = +1;
@@ -902,12 +902,127 @@ bool JelloMesh::CylinderIntersection(Particle& p, World::Cylinder* cylinder, Jel
   // compute distance from edge
   intersection.m_distance = -(d - r);
 
+  return true;
+}
+
+bool JelloMesh::CylinderIntersection2(Particle& p, World::Cylinder* cylinder, JelloMesh::Intersection& intersection) {
+  // attempt at making cylinder intersection better
+  vec3 start = cylinder->start;
+  vec3 end = cylinder->end;
+  vec3 axis = end - start;
+  double r = cylinder->r; 
+  double cylinderLen = axis.Length();
+  //double sqcylinderLen = axis.SqrLength();
+
+  // normalized axis
+  vec3 naxis = axis / cylinderLen;
+
+  double contactThres = 0.01;
+  //double sqLenPlusContact = pow((cylinderLen + contactThres),2);
+
+  // projection of p onto cylinder axis
+  double pdota = Dot((p.position - start), naxis);
+  vec3 pproj = pdota * naxis;
+  double projLen = pproj.Length();
+  // rejection of p from cylinder axis
+  vec3 prej = (p.position - start) - pproj;
+  // d is the distance from the particle to the axis
+  double d = prej.Length();
+  vec3 nprej = prej / d;
+
+  int i, j, k;
+  GetCell(p.index, i, j, k); 
+
+  // if p is outside the radius then no contact
+  if (d > r + contactThres) {
+    return false;
+  }
+  // is p outside end caps if pdota is greater than the square of the length or negative
+  if (pdota < 0.0 - contactThres || pdota > cylinderLen) {
+    return false;
+  }
   /*
-  printf("******** p:(%d,%d,%d):(%0.3f,%0.3f,%0.3f) wall collision, pdota: %f\n", i,j,k,p.position[0], p.position[1], p.position[2], pdota);
-  printf("******** proj:(%0.3f,%0.3f,%0.3f):rej:(%0.3f,%0.3f,%0.3f)\n", pproj[0], pproj[1], pproj[2], nprej[0], nprej[1], nprej[2]);
+  printf("pos(%0.2f, %0.2f, %0.2f): pdota: %0.3f :: d: %0.3f\n", p.position[0], p.position[1], p.position[2],
+                                                                                pdota, d);
   fflush(stdout);
   */
 
+  // There is a contact/collision
+  // store particle index
+  intersection.m_p = p.index;
+
+
+  vec3 pstart = p.position - start;
+
+  // determine which wall the particle is closest to (end cap or cylinder wall)
+  // distance to cylinder edge (circular part)
+  double distToEdge = abs(d - r);
+  // start is at (0,0,0) in cylinder frame 
+  double distToStart = pproj.Length();
+  // distance from end to particle in cylinder frame
+  double distToEnd = (pproj - (start - end)).Length();
+
+
+  // edge contact/collision
+  if (distToEdge < distToStart && distToEdge < distToEnd) {
+    // collision with wall
+    if (d > r) {
+      intersection.m_type = CONTACT;
+    } else {
+      intersection.m_type = COLLISION;
+      printf("-----------------------\n");
+      printf("pos: (%0.2f, %0.2f, %0.2f): pdota: %0.3f :: d: %0.3f\n", p.position[0], p.position[1], p.position[2],
+                                                                                pdota, d);
+      printf("start: (%0.2f, %0.2f, %0.2f): end: (%0.2f, %0.2f, %0.2f)\n", start[0], start[1], start[2], end[0], end[1], end[2]);
+      printf("axis: (%0.2f, %0.2f, %0.2f): paxis: (%0.2f, %0.2f, %0.2f)\n", axis[0], axis[1], axis[2], pstart[0], pstart[1], pstart[2]);
+      printf("proj: (%0.2f, %0.2f, %0.2f): rej: (%0.2f, %0.2f, %0.2f)\n", pproj[0],  pproj[1], pproj[2], prej[0], prej[1], prej[2]);
+      printf("distToEdge: %0.3f, distToStart: %0.3f, distToEnd: %0.3f\n", distToEdge, distToStart, distToEnd);
+      fflush(stdout);
+    }
+
+    // contact with edge
+    // set collision normal (rejection vector)
+    intersection.m_normal = nprej;
+    // compute distance from edge
+    intersection.m_distance = -(d - r);
+    return true;
+
+  } else {
+    // end cap contact/collision 
+    if (distToStart < distToEnd) {
+      // start cap collision
+      int distsign = +1;
+      if (pdota < 0.0) {
+        intersection.m_type = CONTACT;
+        distsign = -1;
+      } else {
+        intersection.m_type = COLLISION;
+        distsign = +1;
+      }
+
+      // set normal (negative of axis)
+      intersection.m_normal = -axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = distsign * pproj.Length();
+      return true;
+    } else {
+      // end cap collision
+      if (pdota > cylinderLen) {
+        intersection.m_type = CONTACT;
+      } else {
+        intersection.m_type = COLLISION;
+      }
+
+      // set normal (positive of axis)
+      intersection.m_normal = axis / cylinderLen;
+      // compute distance from edge
+      intersection.m_distance = -(pproj.Length() - cylinderLen);
+      return true;
+    }
+  }
+
+  // should never reach here
+  assert(false);
 
   return true;
 }

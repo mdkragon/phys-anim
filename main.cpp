@@ -19,8 +19,8 @@ Camera theCamera;
 //World theWorld("worlds/ground.xml");
 //World theWorld("worlds/sphere.xml");
 //World theWorld("worlds/cylinder.xml");
-//World theWorld("worlds/upright_cylinder.xml");
-World theWorld("worlds/tilt_cylinder.xml");
+World theWorld("worlds/upright_cylinder.xml");
+//World theWorld("worlds/tilt_cylinder.xml");
 mmc::FpsTracker theFpsTracker;
 
 // UI Helpers

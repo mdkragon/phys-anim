@@ -115,8 +115,6 @@ public:
       cylinder->start = vec3(startx, starty, startz);
       cylinder->end = vec3(endx, endy, endz);
       vec3 axis = cylinder->end - cylinder->start;
-      cylinder->len = axis.Length();
-      cylinder->sqlen = axis.SqrLength();
       cylinder->r = r;
       m_curBody = cylinder;
 			return true;
@@ -241,71 +239,90 @@ World::~World()
     m_shapes.clear();
 }
 
-void World::Draw()
-{
-	static GLUquadricObj *quadObj = gluNewQuadric();
+void World::Draw() {
+  static GLUquadricObj *quadObj = gluNewQuadric();
 
-    float white[4] = {1.0,1.0,1.0,1.0};
-    float grey[4] = {0.8,0.8,0.8,1.0};
-    float black[4] = {0.0,0.0,0.0,1.0};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, black);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
+  float white[4] = {1.0,1.0,1.0,1.0};
+  float grey[4] = {0.8,0.8,0.8,1.0};
+  float black[4] = {0.0,0.0,0.0,1.0};
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, black);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
 
-    for (unsigned int i = 0; i < m_shapes.size(); i++)
+  for (unsigned int i = 0; i < m_shapes.size(); i++) {
+    vec3 pos = m_shapes[i]->pos;
+    if (m_shapes[i]->GetType() == SPHERE)
     {
-        vec3 pos = m_shapes[i]->pos;
-        if (m_shapes[i]->GetType() == SPHERE)
-        {
-            Sphere* c = (Sphere*) m_shapes[i];
-            glPushMatrix();
-            glTranslatef(pos[0], pos[1], pos[2]);
-            glutSolidSphere(c->r, 20, 20);   
-            glPopMatrix();
-        }
-        else if (m_shapes[i]->GetType() == CUBE)
-        {
-            Cube* c = (Cube*) m_shapes[i];
-            glPushMatrix();
-            glTranslatef(pos[0], pos[1], pos[2]);
-            glScalef(c->hx*2, c->hy*2, c->hz*2);
-            glutSolidCube(1.0);   
-            glPopMatrix();
-        }
-        else if (m_shapes[i]->GetType() == CYLINDER)
-        {
-            Cylinder* c = (Cylinder*) m_shapes[i];
-            vec3 forward = c->end - c->start;
-            double height = forward.Length();
-            double radius = c->r;
+      Sphere* c = (Sphere*) m_shapes[i];
+      glPushMatrix();
+      glTranslatef(pos[0], pos[1], pos[2]);
+      glutSolidSphere(c->r, 20, 20);   
+      glPopMatrix();
+    } else if (m_shapes[i]->GetType() == CUBE) {
+      Cube* c = (Cube*) m_shapes[i];
+      glPushMatrix();
+      glTranslatef(pos[0], pos[1], pos[2]);
+      glScalef(c->hx*2, c->hy*2, c->hz*2);
+      glutSolidCube(1.0);   
+      glPopMatrix();
+    } else if (m_shapes[i]->GetType() == CYLINDER) {
+      Cylinder* c = (Cylinder*) m_shapes[i];
+      vec3 forward = c->end - c->start;
+      double height = forward.Length();
+      double radius = c->r;
 
-            forward.Normalize();
+      forward.Normalize();
 
-            vec3 left = vec3(0,1,0)^forward;
-            vec3 up;
-            if (left.Length() < 0.0001)
-            {
-                up = forward^vec3(1,0,0);
-                left = up^forward;
-            }
-            else
-            {
-                up = forward^left;
-            }
+      /*
+      vec3 left = vec3(0,1,0)^forward;
+      vec3 up;
+      if (left.Length() < 0.0001) {
+          up = forward^vec3(1,0,0);
+          left = up^forward;
+      } else {
+          up = forward^left;
+      }
+      */
+      // rotational support for cylinders (not just axis aligned)
+      // find perpendicular vector
+      //    where perp . forward = 0
+      //    find max component of forward, set the other two components of perp to 1
+      //    solve for the last component of perp and normalize
+      int mi = 0;
+      int a1 = 1;
+      int a2 = 2;
+      if (abs(forward[1]) > abs(forward[mi])) {
+        mi = 1;
+        a1 = 0;
+        a2 = 2;
+      }
+      if (abs(forward[2]) > abs(forward[mi])) { 
+        mi = 2;
+        a1 = 0;
+        a2 = 1;
+      }
+      vec3 left(1.0, 1.0, 1.0);
+      // solve for mi 
+      left[mi] = -(forward[a1] + forward[a2])/forward[mi];
+      left = left / left.Length();
 
-            float m[16];
-            m[0] = left[0]; m[4] = up[0]; m[8] = forward[0];  m[12] = 0; 
-            m[1] = left[1]; m[5] = up[1]; m[9] = forward[1];  m[13] = 0; 
-            m[2] = left[2]; m[6] = up[2]; m[10] = forward[2]; m[14] = 0; 
-            m[3] = 0.0;  m[7] = 0.0;  m[11] = 0.0;  m[15] = 1.0;
+      vec3 up = forward.Cross(left);
 
-	        glPushMatrix();
+
+      float m[16];
+      m[0] = left[0];  m[4] = up[0];  m[8]  = forward[0];  m[12] = 0.0; 
+      m[1] = left[1];  m[5] = up[1];  m[9]  = forward[1];  m[13] = 0.0; 
+      m[2] = left[2];  m[6] = up[2];  m[10] = forward[2];  m[14] = 0.0; 
+      m[3] =     0.0;  m[7] =   0.0;  m[11] =        0.0;  m[15] = 1.0;
+
+      glPushMatrix();
 			glTranslated(c->start[0], c->start[1], c->start[2]);
-            glMultMatrixf(m); 
-	        gluQuadricDrawStyle(quadObj, GLU_FILL);
-	        gluQuadricNormals(quadObj, GLU_SMOOTH);
-	        gluCylinder(quadObj, radius, radius, height, 12, 12);            
+      glMultMatrixf(m); 
+      gluQuadricDrawStyle(quadObj, GLU_FILL);
+      gluQuadricNormals(quadObj, GLU_SMOOTH);
+      gluCylinder(quadObj, radius, radius, height, 12, 12);            
+
 			//endCaps
 			glPushMatrix();
 			gluDisk(quadObj, 0, radius, 12, 12);
@@ -313,18 +330,16 @@ void World::Draw()
 			gluDisk(quadObj, 0, radius, 12, 12);
 			glPopMatrix();
 			glPopMatrix();
-        }
-        else if (m_shapes[i]->GetType() == GROUND)
-        {
-            glBegin(GL_QUADS);
-                glNormal3d(0,1,0);
-                glVertex3f(100, 0.0, -100.0);
-                glVertex3f(100, 0.0, 100.0);
-                glVertex3f(-100, 0.0, 100);
-                glVertex3f(-100, 0.0, -100);
-            glEnd();
-        }
+    } else if (m_shapes[i]->GetType() == GROUND) {
+      glBegin(GL_QUADS);
+      glNormal3d(0,1,0);
+      glVertex3f(100, 0.0, -100.0);
+      glVertex3f(100, 0.0, 100.0);
+      glVertex3f(-100, 0.0, 100);
+      glVertex3f(-100, 0.0, -100);
+      glEnd();
     }
+  }
 }
 
 
