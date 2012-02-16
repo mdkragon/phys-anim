@@ -133,6 +133,7 @@ class JelloMesh {
 
   public:
 
+    static double contactThres;
     static double g_structuralKs;
     static double g_structuralKd;
     static double g_attachmentKs;

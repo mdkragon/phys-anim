@@ -1,0 +1,73 @@
+1) What is the effect of the Ks and Kd parameters on the jello?
+
+  The Ks and Kd paraemters are the proportional and damping coefficeints of the 
+  springs, respectively. They determine the force that each spring has on the
+  attached particles based on Hooke's Law.
+  
+  A larger proportional term will result in larger forces acting on the
+  particles as they deviate from the virtual springs rest length. The damping
+  term is related to the change in the springs deviation from its rest length
+  providing a damping effect.
+
+2) What are the benefits and the drawbacks of the collision system used here?
+    What are some different ways in which it could be improved?
+  
+  The benefits of the collision system we employed is that it is easy to
+  implement and provides a natural looking reponse. 
+
+  One drawback is the fact we are using a stiff spring to model the collisions.
+  Stiff spring limits the time step we can use to keep the system stable since
+  we are using an explicit integration scheme. 
+
+  The system could be improved by first detecting a collision state, then
+  rolling back the simulation to determine where the actual collision happened
+  before applying the collision forces. Right now, I am just assuming the
+  collision is happening at the current particle position and not where it first
+  makes contact with the object.
+  
+
+3) What is an example of a stiff constrained system?
+
+  A "bead on a wire" is an example of a stiff constrained system. We want a
+  particle to orbit a particular position with a desired radius, never deviating
+  from circle.
+
+  Another 2D example is to have a particle that can never leave the Y-axis (y =
+  0) but is free to move along the X-axis (as described in the Baraff notes). 
+
+
+4) What is the difference between the explicit and implicit integration scheme?
+
+  Explicit methods update the function based on the current derivative of the
+  system. 
+  
+  Implicit integration is done by finding a new state (Xnew) such that taking
+  a step from X usin the derivative of Xnew you would end up at Xnew.
+    Xnew = X + h * f(Xnew);
+
+  Explicit integration is under stable, it can become unstable depending on the
+  choice of K and the time step. Implicit integration is over stable, it will
+  not explode. 
+
+
+5) Why would I not want to use a penalty constraint (weak or strong spring) to
+    hold a bead to a wire? How would I formulate the problem instead?
+
+  Explicit integration does not handle stiff constraints well. The whole system
+  is limited by the largest constraint which will require a very small time step
+  to keep stable making the simulation take forever.
+  A weak spring will not produce any reasonable results for keeping the bead on
+  the wire, it will have a large error compared to the desired behavior.
+
+  You can formulate the problem by converting the constraints to forces imposed
+  on the particle. Applying the principle of virtual work (no energy loss/gain)
+  and then using Lagrangian multipliers to solve for the constraints.
+
+
+6) Does the jello behave realistically?
+
+  Comparing it with the video of a high speed camera recording a jello cube as it
+  impacts the ground, the jello cube does not behave as a real life jello cube.
+  The real jello cube performs much more drastic deformations than are exhibited
+  by this simulation.
+
