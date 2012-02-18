@@ -115,7 +115,11 @@ void SmokeSim::grabScreen()
 	}
 
 	char anim_filename[2048];
+#ifndef WIN32
+	sprintf(anim_filename, "smoke_%04d.png", mFrameNum); 
+#else
 	sprintf_s(anim_filename, 2048, "smoke_%04d.png", mFrameNum); 
+#endif
 	
 	stbi_write_png(anim_filename, recordWidth, recordHeight, 3, bitmapData, recordWidth * 3);
 	

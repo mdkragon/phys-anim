@@ -4,6 +4,8 @@
 
 #pragma once
 
+#undef max
+#undef min
 #include <iostream>
 #include <sstream>
 
