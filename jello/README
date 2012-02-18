@@ -1,0 +1,14 @@
+Jordan Brindza
+
+- I was unable to find any good spring constants that worked for Euler integration.
+  Midpoint is stable in some circumstances but not nearly as much as RK4.
+
+- I implemented cylinder, circle and cube/box collision detection.
+
+- I attempted to implement Verlet and Velocity Verlet integration but I didn't 
+  have time to fully test them or find gains that work.
+
+- I also implemented diagonal shear springs which you can enable by setting
+  USE_DIAG_SHEAR to true in jelloMesh.cpp. I don't think I had enough time to
+  test them for good spring constants as they didn't improve the euler performance much.
+
