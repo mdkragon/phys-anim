@@ -22,8 +22,7 @@ bool isRunning = true;
 int savedWidth = 0;
 int savedHeight = 0;
 
-void initCamera()
-{
+void initCamera() {
    double w = theDim[0]*theCellSize;   
    double h = theDim[1]*theCellSize;   
    double d = theDim[2]*theCellSize;   
@@ -36,8 +35,7 @@ void initCamera()
    theCamera.reset();
 }
 
-void onMouseMotionCb(int x, int y)
-{
+void onMouseMotionCb(int x, int y) {
    int deltaX = lastX - x;
    int deltaY = lastY - y;
    bool moveLeftRight = abs(deltaX) > abs(deltaY);
@@ -72,8 +70,7 @@ void onMouseMotionCb(int x, int y)
    glutPostRedisplay();
 }
 
-void onMouseCb(int button, int state, int x, int y)
-{
+void onMouseCb(int button, int state, int x, int y) {
    theButtonState = button;
    theModifierState = glutGetModifiers();
    lastX = x;
@@ -93,8 +90,7 @@ void onMouseCb(int button, int state, int x, int y)
 }
 
 
-void onKeyboardCb(unsigned char key, int x, int y)
-{
+void onKeyboardCb(unsigned char key, int x, int y) {
    if (key == ' ') theCamera.reset();
    else if (key == '0') MACGrid::theRenderMode = MACGrid::CUBES;
    else if (key == '1') MACGrid::theRenderMode = MACGrid::SHEETS;
@@ -107,8 +103,7 @@ void onKeyboardCb(unsigned char key, int x, int y)
    glutPostRedisplay();
 }
 
-void onMenuCb(int value)
-{
+void onMenuCb(int value) {
    switch (value)
    {
    case -1: exit(0);
@@ -117,19 +112,16 @@ void onMenuCb(int value)
    }
 }
 
-void onKeyboardSpecialCb(int key, int x, int y)
-{
+void onKeyboardSpecialCb(int key, int x, int y) {
 }
 
-void onTimerCb(int value)
-{
+void onTimerCb(int value) {
    if (isRunning) theSmokeSim.step();
    glutTimerFunc(theMillisecondsPerFrame, onTimerCb, 0);
    glutPostRedisplay();
 }
 
-void onResizeCb(int width, int height)
-{
+void onResizeCb(int width, int height) {
 	// Save the width and height:
 	savedWidth = width;
 	savedHeight = height;
@@ -143,35 +135,33 @@ void onResizeCb(int width, int height)
    theCamera.setProjection(vfov, ((GLfloat) width)/height, zNear, zFar);
 }
 
-void drawOverlay()
-{
+void drawOverlay() {
   // Draw Overlay
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glPushAttrib(GL_LIGHTING_BIT);
-     glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHTING);
 
-     glMatrixMode(GL_PROJECTION);
-     glLoadIdentity();
-     gluOrtho2D(0.0, 1.0, 0.0, 1.0);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0.0, 1.0, 0.0, 1.0);
 
-     glMatrixMode(GL_MODELVIEW);
-     glLoadIdentity();
-     glRasterPos2f(0.01, 0.01);
-     
-     char info[1024];
-     sprintf(info, "Framerate: %3.1f  |  Frame: %u  |  %s", 
-         theFpsTracker.fpsAverage(), theSmokeSim.getTotalFrames(),
-         theSmokeSim.isRecording()? "Recording..." : "");
- 
-     for (unsigned int i = 0; i < strlen(info); i++)
-     {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, info[i]);
-     }
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glRasterPos2f(0.01, 0.01);
+
+  char info[1024];
+  sprintf(info, "Framerate: %3.1f  |  Frame: %u  |  %s", 
+     theFpsTracker.fpsAverage(), theSmokeSim.getTotalFrames(),
+     theSmokeSim.isRecording()? "Recording..." : "");
+
+  for (unsigned int i = 0; i < strlen(info); i++)
+  {
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, info[i]);
+  }
   glPopAttrib();
 }
 
-void onDrawCb()
-{
+void onDrawCb() {
 	// Keep track of time
 	theFpsTracker.timestamp();
 
@@ -183,8 +173,7 @@ void onDrawCb()
 	glutSwapBuffers();
 }
 
-void init(void)
-{
+void init(void) {
     initCamera();
     glClearColor(0.1, 0.1, 0.1, 1.0);
 
@@ -202,8 +191,7 @@ void init(void)
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(640, 480);

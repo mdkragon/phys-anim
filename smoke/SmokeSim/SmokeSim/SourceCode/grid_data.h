@@ -48,6 +48,9 @@ public:
    // corresponding to it
    virtual void getCell(const vec3& pt, int& i, int& j, int& k);
 
+   // return the dimension
+   vec3 getDim();
+
 protected:
 
    virtual vec3 worldToSelf(const vec3& pt) const;

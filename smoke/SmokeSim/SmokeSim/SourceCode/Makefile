@@ -55,7 +55,7 @@ all: smoke run_smoke
 %.o: %.c
 	$(CC) $(CXX_FLAGS) $(INC_DIRS) -o $@ -c $<
 
-smoke: $(OBJ_FILES)
+smoke: $(OBJ_FILES) 
 	@mkdir -p $(OUT_DIR)
 	$(CXX) -o $(OUT_DIR)/$@ $^ $(CXX_FLAGS) $(INC_DIRS) $(LD_FLAGS) $(LIB_DIRS)
 

@@ -22,6 +22,11 @@ std::vector<double>& GridData::data()
    return mData;
 }
 
+vec3 GridData::getDim()
+{
+   return vec3(mMax);
+}
+
 GridData& GridData::operator=(const GridData& orig)
 {
    if (this == &orig)
@@ -86,8 +91,7 @@ void GridData::getCell(const vec3& pt, int& i, int& j, int& k)
    k = (int) (pos[2]/theCellSize);   
 }
 
-double GridData::interpolate(const vec3& pt)
-{
+double GridData::interpolate(const vec3& pt) {
 
 	// TODO: Implement sharper cubic interpolation here.
 

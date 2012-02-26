@@ -7,130 +7,136 @@
 #include "custom_output.h"
 #include "basic_math.h"
 
-SmokeSim::SmokeSim() : mFrameNum(0), mTotalFrameNum(0), mRecordEnabled(false)
-{
+SmokeSim::SmokeSim() : mFrameNum(0), mTotalFrameNum(0), mRecordEnabled(false) {
    reset();
 }
 
-SmokeSim::~SmokeSim()
-{
+SmokeSim::~SmokeSim() {
 }
 
-void SmokeSim::reset()
-{
-   mGrid.reset();
-	mTotalFrameNum = 0;
+void SmokeSim::reset() {
+  mGrid.reset();
+  mTotalFrameNum = 0;
 }
 
-void SmokeSim::step()
-{
-	double dt = 0.04;//0.1;
+void SmokeSim::step() {
+  static int count = 0;
 
-   // Step0: Gather user forces
-   mGrid.updateSources();
+  //double dt = 0.04;//0.1;
+  double dt = 0.1;
 
-   // Step1: Calculate new velocities
-   mGrid.advectVelocity(dt);
-   mGrid.addExternalForces(dt);
-   mGrid.project(dt);
+  // Step0: Gather user forces
+  mGrid.updateSources();
 
-   // Step2: Calculate new temperature
-   mGrid.advectTemperature(dt);
+  // Step1: Calculate new velocities
+  mGrid.advectVelocity(dt);
+  mGrid.addExternalForces(dt);
+  mGrid.project(dt);
 
-   // Step3: Calculate new density 
-   mGrid.advectDensity(dt);
-	
-	mTotalFrameNum++;
+  // Step2: Calculate new temperature
+  mGrid.advectTemperature(dt);
+
+  // Step3: Calculate new density 
+  mGrid.advectDensity(dt);
+  
+  mTotalFrameNum++;
+
+  if (count >= 0) {
+    exit(0);
+  }
+
+  count += 1;
 }
 
-void SmokeSim::setRecording(bool on, int width, int height)
-{
-   if (on && ! mRecordEnabled)  // reset counter
-   {
-      mFrameNum = 0;
-   }
-   mRecordEnabled = on;
-	
-	recordWidth = width;
-	recordHeight = height;
+void SmokeSim::setRecording(bool on, int width, int height) {
+  // reset counter
+  if (on && ! mRecordEnabled) {
+    mFrameNum = 0;
+  }
+  mRecordEnabled = on;
+
+  recordWidth = width;
+  recordHeight = height;
 }
 
-bool SmokeSim::isRecording()
-{
-   return mRecordEnabled;
+bool SmokeSim::isRecording() {
+  return mRecordEnabled;
 }
 
-void SmokeSim::draw(const Camera& c)
-{
-   drawAxes(); 
-   mGrid.draw(c);
-   if (mRecordEnabled) grabScreen();
+void SmokeSim::draw(const Camera& c) {
+  drawAxes(); 
+  mGrid.draw(c);
+  if (mRecordEnabled) {
+    grabScreen();
+  }
 }
 
-void SmokeSim::drawAxes()
-{
-	glPushAttrib(GL_LIGHTING_BIT | GL_LINE_BIT);
-		glDisable(GL_LIGHTING);
+void SmokeSim::drawAxes() {
+  glPushAttrib(GL_LIGHTING_BIT | GL_LINE_BIT);
+  glDisable(GL_LIGHTING);
 
-		glLineWidth(2.0); 
-		glBegin(GL_LINES);
-			glColor3f(1.0, 0.0, 0.0);
-			glVertex3f(0.0, 0.0, 0.0);
-			glVertex3f(1.0, 0.0, 0.0);
+  glLineWidth(2.0); 
 
-			glColor3f(0.0, 1.0, 0.0);
-			glVertex3f(0.0, 0.0, 0.0);
-			glVertex3f(0.0, 1.0, 0.0);
+    glBegin(GL_LINES);
+      glColor3f(1.0, 0.0, 0.0);
+      glVertex3f(0.0, 0.0, 0.0);
+      glVertex3f(1.0, 0.0, 0.0);
 
-			glColor3f(0.0, 0.0, 1.0);
-			glVertex3f(0.0, 0.0, 0.0);
-			glVertex3f(0.0, 0.0, 1.0);
-		glEnd();
-	glPopAttrib();
+      glColor3f(0.0, 1.0, 0.0);
+      glVertex3f(0.0, 0.0, 0.0);
+      glVertex3f(0.0, 1.0, 0.0);
+
+      glColor3f(0.0, 0.0, 1.0);
+      glVertex3f(0.0, 0.0, 0.0);
+      glVertex3f(0.0, 0.0, 1.0);
+    glEnd();
+
+  glPopAttrib();
 }
 
-void SmokeSim::grabScreen()
-{
-	
-	if (mFrameNum > 9999) exit(0);
-	
+void SmokeSim::grabScreen() {
+  
+  if (mFrameNum > 9999) {
+    exit(0);
+  }
+  
 
-	// TODO: Un-comment this to save each frame of smoke in CIS 460 volumetric text file format.
-	/*
-	// Save the smoke densities:
-	char smoke_filename[2048];
-	sprintf_s(smoke_filename, 2048, "smoke_%04d.txt", mFrameNum); // Use snprintf if your compiler supports C99.
-	mGrid.saveSmoke(smoke_filename);
-	*/
-	
+  // TODO: Un-comment this to save each frame of smoke in CIS 460 volumetric text file format.
+  /*
+  // Save the smoke densities:
+  char smoke_filename[2048];
+  sprintf_s(smoke_filename, 2048, "smoke_%04d.txt", mFrameNum); // Use snprintf if your compiler supports C99.
+  mGrid.saveSmoke(smoke_filename);
+  */
+  
 
-	// Save an image:
+  // Save an image:
 
-	unsigned char* bitmapData = new unsigned char[3 * recordWidth * recordHeight];
+  unsigned char* bitmapData = new unsigned char[3 * recordWidth * recordHeight];
 
-	for (int i=0; i<recordHeight; i++) 
-	{
-		glReadPixels(0,i,recordWidth,1,GL_RGB, GL_UNSIGNED_BYTE, 
-			bitmapData + (recordWidth * 3 * ((recordHeight-1)-i)));
-	}
+  for (int i=0; i<recordHeight; i++) 
+  {
+    glReadPixels(0,i,recordWidth,1,GL_RGB, GL_UNSIGNED_BYTE, 
+      bitmapData + (recordWidth * 3 * ((recordHeight-1)-i)));
+  }
 
-	char anim_filename[2048];
+  char anim_filename[2048];
 #ifndef WIN32
-	sprintf(anim_filename, "smoke_%04d.png", mFrameNum); 
+  sprintf(anim_filename, "smoke_%04d.png", mFrameNum); 
 #else
-	sprintf_s(anim_filename, 2048, "smoke_%04d.png", mFrameNum); 
+  sprintf_s(anim_filename, 2048, "smoke_%04d.png", mFrameNum); 
 #endif
-	
-	stbi_write_png(anim_filename, recordWidth, recordHeight, 3, bitmapData, recordWidth * 3);
-	
-	delete [] bitmapData;
-	
-	
-	
-	mFrameNum++;
-	 
+  
+  stbi_write_png(anim_filename, recordWidth, recordHeight, 3, bitmapData, recordWidth * 3);
+  
+  delete [] bitmapData;
+  
+  
+  
+  mFrameNum++;
+   
 }
 
 int SmokeSim::getTotalFrames() {
-	return mTotalFrameNum;
+  return mTotalFrameNum;
 }
