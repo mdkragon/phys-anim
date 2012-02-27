@@ -8,6 +8,7 @@
 
 #include "fps.h"
 #include "clock.h"
+#include <string.h>
 
 using namespace mmc;
 
