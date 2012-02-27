@@ -8,20 +8,20 @@
 
 #define PRINT_NORMAL_DIST(n, d) {printf("normal: (%0.3f, %0.3f, %0.3f) :: dist = %0.5f\n", n[0], n[1], n[2], d); fflush(stdout); }
 
-#define USE_DIAG_SHEAR true
+#define USE_DIAG_SHEAR false 
 
-double JelloMesh::g_structuralKs = 400.0; 
-double JelloMesh::g_structuralKd = 2.0; 
+double JelloMesh::g_structuralKs = 1000.0; 
+double JelloMesh::g_structuralKd = 20.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 01.0;
-double JelloMesh::g_shearKd = 0.2;
-double JelloMesh::g_bendKs = 100.0;
+double JelloMesh::g_shearKs = 800.0;
+double JelloMesh::g_shearKd = 10.0;
+double JelloMesh::g_bendKs = 400.0;
 double JelloMesh::g_bendKd = 20.0;
-double JelloMesh::g_penaltyKs = 100000.0;
-double JelloMesh::g_penaltyKd = 0100.0;
-double JelloMesh::g_shearDiagKs = 1000.0;
-double JelloMesh::g_shearDiagKd = 10.0;
+double JelloMesh::g_penaltyKs = 200000.0;
+double JelloMesh::g_penaltyKd = 100.0;
+double JelloMesh::g_shearDiagKs = 500.0;
+double JelloMesh::g_shearDiagKd = 1.0;
 
 
 double JelloMesh::contactThres = 0.05;
@@ -211,7 +211,7 @@ void JelloMesh::InitJelloMesh() {
   }
 
   // Setup shear springs
-  //for (int d = 1; d < 2; d++) {
+  //for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
   for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
     for (int i = 0; i < m_rows+1; i++) {
       for (int j = 0; j < m_cols+1; j++) {
@@ -252,7 +252,8 @@ void JelloMesh::InitJelloMesh() {
 
   if (USE_DIAG_SHEAR) {
     // Setup diag shear springs
-    for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
+    //for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
+    for (int d = 1; d < 2; d++) {
       for (int i = 0; i < m_rows+1; i++) {
         for (int j = 0; j < m_cols+1; j++) {
           for (int k = 0; k < m_stacks+1; k++) {
