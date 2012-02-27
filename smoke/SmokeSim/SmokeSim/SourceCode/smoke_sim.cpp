@@ -42,7 +42,7 @@ void SmokeSim::step() {
   mTotalFrameNum++;
 
   if (count >= 0) {
-    exit(0);
+    //exit(0);
   }
 
   count += 1;

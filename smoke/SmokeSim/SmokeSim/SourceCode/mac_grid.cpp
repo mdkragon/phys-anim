@@ -100,10 +100,23 @@ void MACGrid::initialize() {
 }
 
 void MACGrid::updateSources() {
+  static int count = 0;
   // TODO: Set initial values for density, temperature, and velocity.
-  mV(0,1,0) = 1.0;
-  //mU(1,0,0) = 1.0;
+  /* 
+  // 12x12x1
+  mV(6,1,0) = 1.0;
+  mU(7,1,0) = 1.0;
+  mU(6,1,0) = -1.0;
+  if (count < 100) {
+    mD(6,0,0) = 1.0;
+  }
+  */
+
+  // 2x2x1
   mD(0,0,0) = 1.0;
+  mV(0,1,0) = 1.0;
+
+  count += 1;
 }
 
 void MACGrid::advectVelocity(double dt) {
@@ -310,6 +323,40 @@ void MACGrid::advectDensity(double dt) {
 void MACGrid::computeBouyancy(double dt) {
   // TODO: Calculate bouyancy and store in target.
   target.mV = mV;
+  double a = buoyAlpha;
+  double B = buoyBeta;
+  // TODO: what is the mass?
+  double mass = 1.0;
+
+  FOR_EACH_FACE_Y {
+    // get world point for face
+    vec3 pt(i,j,k);
+    pt *= theCellSize;
+    pt[0] += 0.5 * theCellSize;
+    pt[2] += 0.5 * theCellSize;
+
+    // get interpolated temperature at face
+    double T = getTemperature(pt);
+    
+    // get interpolated density
+    double s = getDensity(pt);
+
+    // buoyancy only affects vertical velocity
+    double f = -a * s + B * (T - Tamb);
+
+    // update target velocity
+    target.mV(i,j,k) = mV(i,j,k) + dt * f/mass;
+  }
+
+  #ifdef __DPRINT__
+  printf("***********************************************************************************\n");
+  printf("Buoancy:\n");
+  printf("mV:\n");
+  print_grid_data(mV);
+  printf("target.mV:\n");
+  print_grid_data(target.mV);
+  #endif
+
   // Then save the result to our object.
   mV = target.mV;
 }
@@ -320,6 +367,89 @@ void MACGrid::computeVorticityConfinement(double dt) {
   target.mU = mU;
   target.mV = mV;
   target.mW = mW;
+
+  return;
+
+  // vorticity confinement coefficient
+  double e = vorticityEpsilon;
+
+  // get dimensions
+  vec3 dim = mT.getDim();
+  double xdim = dim[0];
+  double ydim = dim[1];
+  double zdim = dim[2];
+
+  GridData wX = mT;
+  GridData wY = mT;
+  GridData wZ = mT;
+  // compute central differences
+  FOR_EACH_CELL {
+    // get world point of the cell
+    vec3 pt(i,j,k);
+    pt *= theCellSize;
+    pt += vec3(1.0,1.0,1.0)*(0.5*theCellSize);
+
+    // interpolated velocity
+    vec3 vel = getVelocity(pt);
+    
+    // get neighbor positions and velocities
+    vec3 ptIplus1 = pt;
+    ptIplus1[0] += 1.0 * theCellSize;
+    vec3 ptJplus1 = pt;
+    ptJplus1[1] += 1.0 * theCellSize;
+    vec3 ptKplus1 = pt;
+    ptKplus1[2] += 1.0 * theCellSize;
+    vec3 ptIminus1 = pt;
+    ptIminus1[0] -= 1.0 * theCellSize;
+    vec3 ptJminus1 = pt;
+    ptJminus1[1] -= 1.0 * theCellSize;
+    vec3 ptKminus1 = pt;
+    ptKminus1[2] -= 1.0 * theCellSize;
+
+    vec3 velIplus1 = getVelocity(ptIplus1);
+    vec3 velJplus1 = getVelocity(ptJplus1);
+    vec3 velKplus1 = getVelocity(ptKplus1);
+    vec3 velIminus1 = getVelocity(ptIminus1);
+    vec3 velJminus1 = getVelocity(ptJminus1);
+    vec3 velKminus1 = getVelocity(ptKminus1);
+
+    // compute w (voricity)
+    // w_{i,j,k} = (1/(2*dx)) * [ (w_{i,j+1,k} - w_{i,j-1,k}) - (v_{i,j,k+1} - v_{i,j,k-1}),
+    //                            (u_{i,j,k+1} - u_{i,j,k-1}) - (w_{i+1,j,k} - w_{i-1,j,k}),
+    //                            (v_{i+1,j,k} - v_{i-1,j,k}) - (u_{i,j+1,k} - u_{i,j-1,k}) ];
+    wX(i,j,k) = ((velJplus1[2] - velJminus1[2]) - (velKplus1[1] - velKminus1[1])) / (2 * theCellSize);
+    wY(i,j,k) = ((velKplus1[0] - velKminus1[0]) - (velIplus1[2] - velIminus1[2])) / (2 * theCellSize);
+    wZ(i,j,k) = ((velIplus1[1] - velIminus1[1]) - (velJplus1[0] - velJminus1[0])) / (2 * theCellSize);
+  }
+
+  GridData gwX = wX;
+  GridData gwY = wX;
+  GridData gwZ = wX;
+  // compute gradient of w
+  FOR_EACH_CELL {
+    // TODO: what to do about difference that are outside the grid?
+    //  gradW_{i,j,k} = ( (|w_{i+1,j,k}| - |w_{i-1,j,k}|), (|w_{i,j+1,k}| - |w_{i,j-1,k}|), (|w_{i,j,k+1}| - |w_{i,j,k-1}|) )/(2*dx)
+    double wIplus1 = 0.0;
+    double wJplus1 = 0.0;
+    double wKplus1 = 0.0;
+    double wIminus1 = 0.0;
+    double wJminus1 = 0.0;
+    double wKminus1 = 0.0;
+
+    /*
+    if (i + 1 < xdim) {
+      wIplus1 = wX
+    for(int k = 0; k < theDim[MACGrid::Z]; k++)  \
+
+    */
+    
+
+
+  }
+
+
+
+
   // Then save the result to our object.
   mU = target.mU;
   mV = target.mV;
@@ -387,9 +517,6 @@ void MACGrid::project(double dt) {
   printf("mP:\n");
   print_grid_data_as_column(target.mP);
   #endif
-
-
-
 
 
   // update velocities from new pressures
