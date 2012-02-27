@@ -8,7 +8,8 @@
 #pragma warning(disable: 4244 4267 4996)
 #include <vector>
 #include "vec.h"
-#include "Constants.h"
+#include "constants.h"
+#include <stdio.h>
 
 // GridData is capable of storing any data in a grid
 // Columns are indexed with i and increase with increasing x
