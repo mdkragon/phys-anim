@@ -8,81 +8,26 @@
 
 #define PRINT_NORMAL_DIST(n, d) {printf("normal: (%0.3f, %0.3f, %0.3f) :: dist = %0.5f\n", n[0], n[1], n[2], d); fflush(stdout); }
 
-#define USE_DIAG_SHEAR false 
+#define USE_DIAG_SHEAR true
 
-// GridSize = 6
-/* new rk4
-double JelloMesh::g_structuralKs = 3000.0; 
-double JelloMesh::g_structuralKd = 20.0; 
+double JelloMesh::g_structuralKs = 400.0; 
+double JelloMesh::g_structuralKd = 2.0; 
 double JelloMesh::g_attachmentKs = 0.0;
 double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 4000.0;
-double JelloMesh::g_shearKd = 10.0;
-double JelloMesh::g_bendKs = 2000.0;
-double JelloMesh::g_bendKd = 10.0;
-double JelloMesh::g_penaltyKs = 10000.0;
-double JelloMesh::g_penaltyKd = 040.0;
-*/
-
-/* midpoint final
-double JelloMesh::g_structuralKs = 4000.0; 
-double JelloMesh::g_structuralKd = 20.0; 
-double JelloMesh::g_attachmentKs = 0.0;
-double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 3000.0;
-double JelloMesh::g_shearKd = 20.0;
-double JelloMesh::g_bendKs = 2500.0;
+double JelloMesh::g_shearKs = 01.0;
+double JelloMesh::g_shearKd = 0.2;
+double JelloMesh::g_bendKs = 100.0;
 double JelloMesh::g_bendKd = 20.0;
-double JelloMesh::g_penaltyKs = 60000.0;
-double JelloMesh::g_penaltyKd = 0100.0;
-*/
-
-
-double JelloMesh::g_structuralKs = 4000.0; 
-double JelloMesh::g_structuralKd = 20.0; 
-double JelloMesh::g_attachmentKs = 0.0;
-double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 3000.0;
-double JelloMesh::g_shearKd = 20.0;
-double JelloMesh::g_bendKs = 2500.0;
-double JelloMesh::g_bendKd = 20.0;
-double JelloMesh::g_penaltyKs = 60000.0;
+double JelloMesh::g_penaltyKs = 100000.0;
 double JelloMesh::g_penaltyKd = 0100.0;
 double JelloMesh::g_shearDiagKs = 1000.0;
 double JelloMesh::g_shearDiagKd = 10.0;
-/*
-double JelloMesh::g_structuralKs = 2000.0; 
-double JelloMesh::g_structuralKd = 10.0; 
-double JelloMesh::g_attachmentKs = 0.0;
-double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 2000.0;
-double JelloMesh::g_shearKd = 10.0;
-double JelloMesh::g_shearDiagKs = 2000.0;
-double JelloMesh::g_shearDiagKd = 10.0;
-double JelloMesh::g_bendKs = 1500.0;
-double JelloMesh::g_bendKd = 10.0;
-double JelloMesh::g_penaltyKs = 40000.0;
-double JelloMesh::g_penaltyKd = 0020.0;
-*/
-
-/* final
-double JelloMesh::g_structuralKs = 4000.0; 
-double JelloMesh::g_structuralKd = 20.0; 
-double JelloMesh::g_attachmentKs = 0.0;
-double JelloMesh::g_attachmentKd = 0.0;
-double JelloMesh::g_shearKs = 4000.0;
-double JelloMesh::g_shearKd = 20.0;
-double JelloMesh::g_bendKs = 2500.0;
-double JelloMesh::g_bendKd = 20.0;
-double JelloMesh::g_penaltyKs = 60000.0;
-double JelloMesh::g_penaltyKd = 0100.0;
-*/
 
 
 double JelloMesh::contactThres = 0.05;
 
 JelloMesh::JelloMesh() :     
-    m_integrationType(JelloMesh::VERLET), m_drawflags(MESH | STRUCTURAL),
+    m_integrationType(JelloMesh::RK4), m_drawflags(MESH | STRUCTURAL),
     m_cols(0), m_rows(0), m_stacks(0), m_width(0.0), m_height(0.0), m_depth(0.0) {
   SetSize(1.0, 1.0, 1.0);
   SetGridSize(6, 6, 6);
@@ -245,73 +190,61 @@ void JelloMesh::InitJelloMesh() {
 
 
   ParticleGrid& g = m_vparticles;
-
-  // Setup structural springs
-  for (int i = 0; i < m_rows+1; i++) {
-    for (int j = 0; j < m_cols+1; j++) {
-      for (int k = 0; k < m_stacks+1; k++) {
-        if (j < m_cols) {
-          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+1,k));
-        }
-        if (i < m_rows) { 
-          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j,k));
-        }
-        if (k < m_stacks) {
-          AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j,k+1));
-        }
-      }
-    }
-  }
-
-  // Setup bend springs
-  for (int i = 0; i < m_rows+1; i++) {
-    for (int j = 0; j < m_cols+1; j++) {
-      for (int k = 0; k < m_stacks+1; k++) {
-        if (j < m_cols - 1) {
-          AddBendSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+2,k));
-        }
-        if (i < m_rows - 1) { 
-          AddBendSpring(GetParticle(g,i,j,k), GetParticle(g,i+2,j,k));
-        }
-        if (k < m_stacks - 1) {
-          AddBendSpring(GetParticle(g,i,j,k), GetParticle(g,i,j,k+2));
+  
+  // Setup structural/bend springs
+  for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
+    for (int i = 0; i < m_rows+1; i++) {
+      for (int j = 0; j < m_cols+1; j++) {
+        for (int k = 0; k < m_stacks+1; k++) {
+          if (j < m_cols+1-d) {
+            AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+d,k));
+          }
+          if (i < m_rows+1-d) { 
+            AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j,k));
+          }
+          if (k < m_stacks+1-d) {
+            AddStructuralSpring(GetParticle(g,i,j,k), GetParticle(g,i,j,k+d));
+          }
         }
       }
     }
   }
 
   // Setup shear springs
-  for (int i = 0; i < m_rows+1; i++) {
-    for (int j = 0; j < m_cols+1; j++) {
-      for (int k = 0; k < m_stacks+1; k++) {
-        // xy plane springs
-        if (j < m_cols && i < m_rows) {
-          // add right side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j+1,k));
-        }
-        if (j > 0 && i < m_rows) {
-          // add left side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j-1,k));
-        }
+  //for (int d = 1; d < 2; d++) {
+  for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
+    for (int i = 0; i < m_rows+1; i++) {
+      for (int j = 0; j < m_cols+1; j++) {
+        for (int k = 0; k < m_stacks+1; k++) {
+          // xy plane springs
+          if (j < m_cols+1-d && i < m_rows+1-d) {
+            // add right side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j+d,k));
+          }
+          if (j > 0-1+d && i < m_rows+1-d) {
+            // add left side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j-j,k));
+          }
 
-        // yz plane
-        if (k < m_stacks && j < m_cols) {
-          // add right side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+1,k+1));
-        }
-        if (k > 0 && j < m_cols) {
-          // add right side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+1,k-1));
-        }
+          // yz plane
+          if (k < m_stacks+1-d && j < m_cols+1-d) {
+            // add right side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+d,k+d));
+          }
+          if (k > 0-1+d && j < m_cols+1-d) {
+            // add right side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i,j+d,k-d));
+          }
 
-        // xz plane
-        if (i < m_rows && k < m_stacks) {
-          // add right side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j,k+1));
-        }
-        if (i > 0 && k < m_stacks) {
-          // add right side spring
-          AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i-1,j,k+1));
+          // xz plane
+          if (i < m_rows+1-d && k < m_stacks+1-d) {
+            // add right side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j,k+d));
+          }
+          if (i > 0-1+d && k < m_stacks+1-d) {
+            // add right side spring
+            AddShearSpring(GetParticle(g,i,j,k), GetParticle(g,i-d,j,k+d));
+          }
         }
       }
     }
@@ -319,31 +252,33 @@ void JelloMesh::InitJelloMesh() {
 
   if (USE_DIAG_SHEAR) {
     // Setup diag shear springs
-    for (int i = 0; i < m_rows+1; i++) {
-      for (int j = 0; j < m_cols+1; j++) {
-        for (int k = 0; k < m_stacks+1; k++) {
-          // right forward
-          if (j < m_cols && i < m_rows && k < m_stacks) {
-            // add right side spring
-            AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j+1,k+1));
-          }
-          // left forward
-          if (j > 0 && i < m_rows && k < m_stacks) {
-            // add right side spring
-            AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i+1,j-1,k+1));
-          }
+    for (int d = 1; d < max(max(m_rows, m_cols), m_stacks); d++) {
+      for (int i = 0; i < m_rows+1; i++) {
+        for (int j = 0; j < m_cols+1; j++) {
+          for (int k = 0; k < m_stacks+1; k++) {
+            // right forward
+            if (j < m_cols+1-d && i < m_rows+1-d && k < m_stacks+1-d) {
+              // add right side spring
+              AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j+d,k+d));
+            }
+            // left forward
+            if (j > 0-1+d && i < m_rows+1-d && k < m_stacks+1-d) {
+              // add right side spring
+              AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i+d,j-d,k+d));
+            }
 
-          // right back 
-          if (j < m_cols && i > 0 && k < m_stacks) {
-            // add right side spring
-            AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i-1,j+1,k+1));
-          }
-          // left back 
-          if (j > 0 && i > 0 && k < m_stacks) {
-            // add right side spring
-            AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i-1,j-1,k+1));
-          }
+            // right back 
+            if (j < m_cols+1-d && i > 0-1+d && k < m_stacks+1-d) {
+              // add right side spring
+              AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i-d,j+d,k+d));
+            }
+            // left back 
+            if (j > 0-1+d && i > 0-1+d && k < m_stacks+d-1) {
+              // add right side spring
+              AddShearDiagSpring(GetParticle(g,i,j,k), GetParticle(g,i-d,j-d,k+d));
+            }
 
+          }
         }
       }
     }
