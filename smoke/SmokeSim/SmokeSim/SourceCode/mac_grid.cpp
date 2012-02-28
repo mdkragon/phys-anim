@@ -115,6 +115,7 @@ void MACGrid::updateSources() {
   // 2x2x1
   mD(0,0,0) = 1.0;
   mV(0,1,0) = 1.0;
+  //mT(0,1,0) = 50.0;
 
   count += 1;
 }
@@ -345,10 +346,13 @@ void MACGrid::computeBouyancy(double dt) {
     double f = -a * s + B * (T - Tamb);
 
     // update target velocity
-    target.mV(i,j,k) = mV(i,j,k) + dt * f/mass;
+    // TODO: convert mass to acceleration?
+    target.mV(i,j,k) = mV(i,j,k) + dt * f;
+    //target.mV(i,j,k) = mV(i,j,k) + dt * f/(s*theCellSize*theCellSize + 10e-20);
   }
 
-  #ifdef __DPRINT__
+  //#ifdef __DPRINT__
+  #if 1
   printf("***********************************************************************************\n");
   printf("Buoancy:\n");
   printf("mV:\n");
@@ -436,18 +440,45 @@ void MACGrid::computeVorticityConfinement(double dt) {
     double wJminus1 = 0.0;
     double wKminus1 = 0.0;
 
-    /*
     if (i + 1 < xdim) {
-      wIplus1 = wX
-    for(int k = 0; k < theDim[MACGrid::Z]; k++)  \
+      wIplus1 = wX(i+1,j,k);
+    }
+    if (i - 1 > 0) {
+      wIminus1 = wX(i-1,j,k);
+    }
 
-    */
+    if (j + 1 < ydim) {
+      wJplus1 = wY(i,j+1,k);
+    }
+    if (j - 1 > 0) {
+      wJminus1 = wY(i,j-1,k);
+    }
     
+    if (k + 1 < zdim) {
+      wKplus1 = wZ(i,j,k+1);
+    }
+    if (k - 1 > 0) {
+      wKminus1 = wY(i,j,k-1);
+    }
+    
+    gwX(i,j,k) = (abs(wIplus1) - abs(wIminus1))/(2*theCellSize*theCellSize);
+    gwY(i,j,k) = (abs(wJplus1) - abs(wJminus1))/(2*theCellSize*theCellSize);
+    gwZ(i,j,k) = (abs(wKplus1) - abs(wKminus1))/(2*theCellSize*theCellSize);
 
+    // normalize
+    double div = sqrt(gwX(i,j,k)*gwX(i,j,k) + gwY(i,j,k)*gwY(i,j,k) + gwZ(i,j,k)*gwZ(i,j,k)) + 10e-20;
+    gwX(i,j,k) = gwX(i,j,k) / div;
+    gwY(i,j,k) = gwY(i,j,k) / div;
+    gwZ(i,j,k) = gwZ(i,j,k) / div;
 
+    // compute force
+    // f = epsilon * dx * (N cross w);
+    vec3 n(gwX(i,j,k), gwY(i,j,k), gwZ(i,j,k));
+    vec3 w(wX(i,j,k), wY(i,j,k), wZ(i,j,k));
+    vec3 fconf = vorticityEpsilon * (n ^ w);
+
+    // update velocities
   }
-
-
 
 
   // Then save the result to our object.
@@ -510,8 +541,8 @@ void MACGrid::project(double dt) {
   #ifdef __DPRINT__
   printf("***********************************************************************************\n");
   printf("Project: %s\n", ret ? "true" : "false");
-  printf("A:\n");
-  A.print();
+  //printf("A:\n");
+  //A.print();
   printf("d:\n");
   print_grid_data_as_column(d);
   printf("mP:\n");
@@ -795,54 +826,44 @@ void MACGrid::saveSmoke(const char* fileName) {
 
 /////////////////////////////////////////////////////////////////////
 
-void MACGrid::draw(const Camera& c)
-{   
+void MACGrid::draw(const Camera& c) {   
    drawWireGrid();
    if (theDisplayVel) drawVelocities();   
    if (theRenderMode == CUBES) drawSmokeCubes(c);
    else drawSmoke(c);
 }
 
-void MACGrid::drawVelocities()
-{
-   // Draw line at each center
-   //glColor4f(0.0, 1.0, 0.0, 1.0); // Use this if you want the lines to be a single color.
-   glBegin(GL_LINES);
-      FOR_EACH_CELL
-      {
-         vec3 pos = getCenter(i,j,k);
-         vec3 vel = getVelocity(pos);
-         if (vel.Length() > 0.0001)
-         {
-       // Un-comment the line below if you want all of the velocity lines to be the same length.
-           //vel.Normalize();
-           vel *= theCellSize/2.0;
-           vel += pos;
-       glColor4f(1.0, 1.0, 0.0, 1.0);
-           glVertex3dv(pos.n);
-       glColor4f(0.0, 1.0, 0.0, 1.0);
-           glVertex3dv(vel.n);
-         }
+void MACGrid::drawVelocities() {
+  // Draw line at each center
+  //glColor4f(0.0, 1.0, 0.0, 1.0); // Use this if you want the lines to be a single color.
+  glBegin(GL_LINES);
+    FOR_EACH_CELL {
+      vec3 pos = getCenter(i,j,k);
+      vec3 vel = getVelocity(pos);
+      if (vel.Length() > 0.0001) {
+        // Un-comment the line below if you want all of the velocity lines to be the same length.
+        //vel.Normalize();
+        vel *= theCellSize/2.0;
+        vel += pos;
+        glColor4f(1.0, 1.0, 0.0, 1.0);
+        glVertex3dv(pos.n);
+        glColor4f(0.0, 1.0, 0.0, 1.0);
+        glVertex3dv(vel.n);
       }
-   glEnd();
+    }
+  glEnd();
 }
 
-vec4 MACGrid::getRenderColor(int i, int j, int k)
-{
-
+vec4 MACGrid::getRenderColor(int i, int j, int k) {
   // Modify this if you want to change the smoke color, or modify it based on other smoke properties.
-    double value = mD(i, j, k); 
-    return vec4(1.0, 1.0, 1.0, value);
-
+  double value = mD(i, j, k); 
+  return vec4(1.0, 1.0, 1.0, value);
 }
 
-vec4 MACGrid::getRenderColor(const vec3& pt)
-{
-
+vec4 MACGrid::getRenderColor(const vec3& pt) {
   // TODO: Modify this if you want to change the smoke color, or modify it based on other smoke properties.
-    double value = getDensity(pt); 
-    return vec4(1.0, 1.0, 1.0, value);
-
+  double value = getDensity(pt); 
+  return vec4(1.0, 1.0, 1.0, value);
 }
 
 void MACGrid::drawZSheets(bool backToFront)
