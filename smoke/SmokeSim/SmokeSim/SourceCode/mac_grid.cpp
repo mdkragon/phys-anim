@@ -372,8 +372,6 @@ void MACGrid::computeVorticityConfinement(double dt) {
   target.mV = mV;
   target.mW = mW;
 
-  return;
-
   // vorticity confinement coefficient
   double e = vorticityEpsilon;
 
@@ -386,15 +384,21 @@ void MACGrid::computeVorticityConfinement(double dt) {
   GridData wX = mT;
   GridData wY = mT;
   GridData wZ = mT;
+  GridData cU = mT;
+  GridData cV = mT;
+  GridData cW = mT;
   // compute central differences
   FOR_EACH_CELL {
     // get world point of the cell
     vec3 pt(i,j,k);
+    pt.Print("ind: ");
     pt *= theCellSize;
     pt += vec3(1.0,1.0,1.0)*(0.5*theCellSize);
+    pt.Print("pt: ");
 
     // interpolated velocity
     vec3 vel = getVelocity(pt);
+    vel.Print("vel: ");
     
     // get neighbor positions and velocities
     vec3 ptIplus1 = pt;
@@ -416,6 +420,12 @@ void MACGrid::computeVorticityConfinement(double dt) {
     vec3 velIminus1 = getVelocity(ptIminus1);
     vec3 velJminus1 = getVelocity(ptJminus1);
     vec3 velKminus1 = getVelocity(ptKminus1);
+    velIplus1.Print("velIplus1: ");
+    velJplus1.Print("velJplus1: ");
+    velKplus1.Print("velKplus1: ");
+    velIminus1.Print("velIminus1: ");
+    velJminus1.Print("velJminus1: ");
+    velKminus1.Print("velKminus1: ");
 
     // compute w (voricity)
     // w_{i,j,k} = (1/(2*dx)) * [ (w_{i,j+1,k} - w_{i,j-1,k}) - (v_{i,j,k+1} - v_{i,j,k-1}),
@@ -425,6 +435,23 @@ void MACGrid::computeVorticityConfinement(double dt) {
     wY(i,j,k) = ((velKplus1[0] - velKminus1[0]) - (velIplus1[2] - velIminus1[2])) / (2 * theCellSize);
     wZ(i,j,k) = ((velIplus1[1] - velIminus1[1]) - (velJplus1[0] - velJminus1[0])) / (2 * theCellSize);
   }
+
+  #ifdef __DPRINT__
+  printf("***********************************************************************************\n");
+  printf("Vortices:\n");
+  printf("mU:\n");
+  print_grid_data(mU);
+  printf("mV:\n");
+  print_grid_data(mV);
+  printf("mW:\n");
+  print_grid_data(mW);
+  printf("wX:\n");
+  print_grid_data(wX);
+  printf("wY:\n");
+  print_grid_data(wY);
+  printf("wZ:\n");
+  print_grid_data(wZ);
+  #endif
 
   GridData gwX = wX;
   GridData gwY = wX;
@@ -460,11 +487,31 @@ void MACGrid::computeVorticityConfinement(double dt) {
     if (k - 1 > 0) {
       wKminus1 = wY(i,j,k-1);
     }
-    
-    gwX(i,j,k) = (abs(wIplus1) - abs(wIminus1))/(2*theCellSize*theCellSize);
-    gwY(i,j,k) = (abs(wJplus1) - abs(wJminus1))/(2*theCellSize*theCellSize);
-    gwZ(i,j,k) = (abs(wKplus1) - abs(wKminus1))/(2*theCellSize*theCellSize);
 
+    
+    // get world coordinate
+    vec3 pt(i,j,k);
+    pt *= theCellSize;
+    pt += vec3(1.0,1.0,1.0) * (0.5*theCellSize);
+    vec3 ptIplus1 = pt + vec3(1.0,0.0,0.0)*theCellSize;
+    vec3 ptJplus1 = pt + vec3(0.0,1.0,0.0)*theCellSize;
+    vec3 ptKplus1 = pt + vec3(0.0,0.0,1.0)*theCellSize;
+    vec3 ptIminus1 = pt + vec3(1.0,0.0,0.0)*theCellSize;
+    vec3 ptJminus1 = pt + vec3(0.0,1.0,0.0)*theCellSize;
+    vec3 ptKminus1 = pt + vec3(0.0,0.0,1.0)*theCellSize;
+    wIplus1 = wX.interpolate(ptIplus1);
+    wJplus1 = wX.interpolate(ptJplus1);
+    wKplus1 = wX.interpolate(ptKplus1);
+    wIminus1 = wX.interpolate(ptIminus1);
+    wJminus1 = wX.interpolate(ptJminus1);
+    wKminus1 = wX.interpolate(ptKminus1);
+
+    
+    gwX(i,j,k) = (abs(wIplus1) - abs(wIminus1))/(2*theCellSize);
+    gwY(i,j,k) = (abs(wJplus1) - abs(wJminus1))/(2*theCellSize);
+    gwZ(i,j,k) = (abs(wKplus1) - abs(wKminus1))/(2*theCellSize);
+
+    
     // normalize
     double div = sqrt(gwX(i,j,k)*gwX(i,j,k) + gwY(i,j,k)*gwY(i,j,k) + gwZ(i,j,k)*gwZ(i,j,k)) + 10e-20;
     gwX(i,j,k) = gwX(i,j,k) / div;
@@ -476,9 +523,20 @@ void MACGrid::computeVorticityConfinement(double dt) {
     vec3 n(gwX(i,j,k), gwY(i,j,k), gwZ(i,j,k));
     vec3 w(wX(i,j,k), wY(i,j,k), wZ(i,j,k));
     vec3 fconf = vorticityEpsilon * (n ^ w);
+    
 
     // update velocities
   }
+
+  #ifdef __DPRINT__
+  printf("-----------------------------------------------------\n");
+  printf("gwX:\n");
+  print_grid_data(gwX);
+  printf("gwY:\n");
+  print_grid_data(gwY);
+  printf("gwZ:\n");
+  print_grid_data(gwZ);
+  #endif
 
 
   // Then save the result to our object.
