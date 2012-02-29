@@ -125,10 +125,24 @@ void MACGrid::updateSources() {
   //mD(6,11,0) = 2.0;
 
   // 2x2x1
-  mV(0,1,0) = 1.0;
+  //mV(0,1,0) = 1.0;
   //mU(1,0,0) = 1.0;
   //mT(0,1,0) = 50.0;
-  mD(0,0,0) = 1.0;
+  //mD(0,0,0) = 1.0;
+
+  mD(4,4,4) = 1.0;
+  mD(4,5,4) = 1.0;
+  mD(4,4,5) = 1.0;
+  mD(4,5,5) = 1.0;
+  mT(4,4,4) = 100.0;
+  mT(4,5,4) = 100.0;
+  mT(4,4,5) = 100.0;
+  mT(4,5,5) = 100.0;
+
+  mU(5,4,4) = 1.0;
+  mU(5,5,4) = 1.0;
+  mU(5,4,5) = 1.0;
+  mU(5,5,5) = 1.0;
 
   count += 1;
 }
@@ -642,7 +656,7 @@ void MACGrid::project(double dt) {
 
   // solve for new pressures such that the fluid remains incompressible
   // TODO: what maxIterations and tolerance to use?
-  bool ret = conjugateGradient(A, target.mP, d, 10000, 0.0001);
+  bool ret = conjugateGradient(A, target.mP, d, 100000, 0.00001);
 
 
   #ifdef __DPRINT__
