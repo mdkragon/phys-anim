@@ -102,8 +102,8 @@ void MACGrid::initialize() {
 void MACGrid::updateSources() {
   static int count = 0;
   // TODO: Set initial values for density, temperature, and velocity.
-  /* 
   // 12x12x1
+  /*
   mV(6,1,0) = 1.0;
   mU(7,1,0) = 1.0;
   mU(6,1,0) = -1.0;
@@ -111,11 +111,24 @@ void MACGrid::updateSources() {
     mD(6,0,0) = 1.0;
   }
   */
+  //mV(6,1,0) = 1.0;
+  //mU(1,0,0) = 1.0;
+  //mT(6,7,0) = 50.0;
+  //mD(0,4,0) = 2.0;
+  //mU(1,4,0) = 2.0;
+  //mV(0,1,0) = 1.0;
+  //mT(0,4,0) = 50.0;
+  //mD(19,0,0) = 1.0;
+  //mU(19,0,0) = -1.0;
+
+  //mT(6,11,0) = -20.0;
+  //mD(6,11,0) = 2.0;
 
   // 2x2x1
-  mD(0,0,0) = 1.0;
   mV(0,1,0) = 1.0;
+  //mU(1,0,0) = 1.0;
   //mT(0,1,0) = 50.0;
+  mD(0,0,0) = 1.0;
 
   count += 1;
 }
@@ -145,16 +158,6 @@ void MACGrid::advectVelocity(double dt) {
 
     // store new velocity
     target.mU(i, j, k) = nvel[0];
-    
-    //#ifdef __DPRINT__
-    #if 0
-    printf("pt = (%0.3f, %0.3f, %0.3f)\n", pt[0], pt[1], pt[2]);
-    printf("U(%d,%d,%d) = (%0.3f, %0.3f, %0.3f)\n", i, j, k, vel[0], vel[1], vel[2]);
-    printf("\tbpt = (%0.3f, %0.3f, %0.3f)\n", bpt[0], bpt[1], bpt[2]);
-    printf("\tnvel = (%0.3f, %0.3f, %0.3f)\n", nvel[0], nvel[1], nvel[2]);
-    printf("\tnvel = %0.3f\n", nvel[0]);
-    fflush(stdout);
-    #endif
   }
 
 
@@ -177,16 +180,6 @@ void MACGrid::advectVelocity(double dt) {
 
     // store new velocity
     target.mV(i, j, k) = nvel[1];
-
-    //#ifdef __DPRINT__
-    #if 0
-    printf("pt = (%0.3f, %0.3f, %0.3f)\n", pt[0], pt[1], pt[2]);
-    printf("V(%d,%d,%d) = (%0.3f, %0.3f, %0.3f)\n", i, j, k, vel[0], vel[1], vel[2]);
-    printf("\tbpt = (%0.3f, %0.3f, %0.3f)\n", bpt[0], bpt[1], bpt[2]);
-    printf("\tnvel = (%0.3f, %0.3f, %0.3f)\n", nvel[0], nvel[1], nvel[2]);
-    printf("\tnvel = %0.3f\n", nvel[1]);
-    fflush(stdout);
-    #endif
   }
 
   // iterate over each Z face
@@ -208,19 +201,10 @@ void MACGrid::advectVelocity(double dt) {
 
     // store new velocity
     target.mW(i, j, k) = nvel[2];
-
-    //#ifdef __DPRINT__
-    #if 0
-    printf("pt = (%0.3f, %0.3f, %0.3f)\n", pt[0], pt[1], pt[2]);
-    printf("W(%d,%d,%d) = (%0.3f, %0.3f, %0.3f)\n", i, j, k, vel[0], vel[1], vel[2]);
-    printf("\tbpt = (%0.3f, %0.3f, %0.3f)\n", bpt[0], bpt[1], bpt[2]);
-    printf("\tnvel = (%0.3f, %0.3f, %0.3f)\n", nvel[0], nvel[1], nvel[2]);
-    printf("\tnvel = %0.3f\n", nvel[2]);
-    fflush(stdout);
-    #endif
   }
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_ADVVEL__
   printf("***********************************************************************************\n");
   printf("Advected Velocities:\n");
   printf("mU:\n");
@@ -235,6 +219,7 @@ void MACGrid::advectVelocity(double dt) {
   print_grid_data(target.mV);
   printf("target.mW:\n");
   print_grid_data(target.mW);
+  #endif
   #endif
 
   // Then save the result to our object.
@@ -270,12 +255,14 @@ void MACGrid::advectTemperature(double dt) {
   }
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_ADVTEMP__
   printf("***********************************************************************************\n");
   printf("Advected Temperature:\n");
   printf("mT:\n");
   print_grid_data(mT);
   printf("target.mT:\n");
   print_grid_data(target.mT);
+  #endif
   #endif
 
   // Then save the result to our object.
@@ -309,12 +296,14 @@ void MACGrid::advectDensity(double dt) {
   }
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_ADVDENS__
   printf("***********************************************************************************\n");
   printf("Advected Density:\n");
   printf("mD:\n");
   print_grid_data(mD);
   printf("target.mD:\n");
   print_grid_data(target.mD);
+  #endif
   #endif
 
   // Then save the result to our object.
@@ -330,6 +319,10 @@ void MACGrid::computeBouyancy(double dt) {
   double mass = 1.0;
 
   FOR_EACH_FACE_Y {
+    if (j == 0 || j == theDim[MACGrid::Y]) {
+      // do not update boundary
+      continue;
+    }
     // get world point for face
     vec3 pt(i,j,k);
     pt *= theCellSize;
@@ -351,14 +344,15 @@ void MACGrid::computeBouyancy(double dt) {
     //target.mV(i,j,k) = mV(i,j,k) + dt * f/(s*theCellSize*theCellSize + 10e-20);
   }
 
-  //#ifdef __DPRINT__
-  #if 1
+  #ifdef __DPRINT__
+  #ifdef __DPRINT_BUOY__
   printf("***********************************************************************************\n");
   printf("Buoancy:\n");
   printf("mV:\n");
   print_grid_data(mV);
   printf("target.mV:\n");
   print_grid_data(target.mV);
+  #endif
   #endif
 
   // Then save the result to our object.
@@ -381,24 +375,21 @@ void MACGrid::computeVorticityConfinement(double dt) {
   double ydim = dim[1];
   double zdim = dim[2];
 
-  GridData wX = mT;
-  GridData wY = mT;
-  GridData wZ = mT;
-  GridData cU = mT;
-  GridData cV = mT;
-  GridData cW = mT;
+  GridData wX(mD);
+  GridData wY(mD);
+  GridData wZ(mD);
+  GridData cU(mD);
+  GridData cV(mD);
+  GridData cW(mD);
   // compute central differences
   FOR_EACH_CELL {
     // get world point of the cell
     vec3 pt(i,j,k);
-    pt.Print("ind: ");
     pt *= theCellSize;
     pt += vec3(1.0,1.0,1.0)*(0.5*theCellSize);
-    pt.Print("pt: ");
 
     // interpolated velocity
     vec3 vel = getVelocity(pt);
-    vel.Print("vel: ");
     
     // get neighbor positions and velocities
     vec3 ptIplus1 = pt;
@@ -414,18 +405,13 @@ void MACGrid::computeVorticityConfinement(double dt) {
     vec3 ptKminus1 = pt;
     ptKminus1[2] -= 1.0 * theCellSize;
 
+
     vec3 velIplus1 = getVelocity(ptIplus1);
     vec3 velJplus1 = getVelocity(ptJplus1);
     vec3 velKplus1 = getVelocity(ptKplus1);
     vec3 velIminus1 = getVelocity(ptIminus1);
     vec3 velJminus1 = getVelocity(ptJminus1);
     vec3 velKminus1 = getVelocity(ptKminus1);
-    velIplus1.Print("velIplus1: ");
-    velJplus1.Print("velJplus1: ");
-    velKplus1.Print("velKplus1: ");
-    velIminus1.Print("velIminus1: ");
-    velJminus1.Print("velJminus1: ");
-    velKminus1.Print("velKminus1: ");
 
     // compute w (voricity)
     // w_{i,j,k} = (1/(2*dx)) * [ (w_{i,j+1,k} - w_{i,j-1,k}) - (v_{i,j,k+1} - v_{i,j,k-1}),
@@ -437,6 +423,7 @@ void MACGrid::computeVorticityConfinement(double dt) {
   }
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_VORT__
   printf("***********************************************************************************\n");
   printf("Vortices:\n");
   printf("mU:\n");
@@ -452,68 +439,55 @@ void MACGrid::computeVorticityConfinement(double dt) {
   printf("wZ:\n");
   print_grid_data(wZ);
   #endif
+  #endif
 
-  GridData gwX = wX;
-  GridData gwY = wX;
-  GridData gwZ = wX;
+  GridData gwX(mD);
+  GridData gwY(mD);
+  GridData gwZ(mD);
+  GridData fX(mD);
+  GridData fY(mD);
+  GridData fZ(mD);
+  GridDataX dmU(mU);
+  GridDataY dmV(mV);
+  GridDataZ dmW(mW);
   // compute gradient of w
   FOR_EACH_CELL {
     // TODO: what to do about difference that are outside the grid?
     //  gradW_{i,j,k} = ( (|w_{i+1,j,k}| - |w_{i-1,j,k}|), (|w_{i,j+1,k}| - |w_{i,j-1,k}|), (|w_{i,j,k+1}| - |w_{i,j,k-1}|) )/(2*dx)
-    double wIplus1 = 0.0;
-    double wJplus1 = 0.0;
-    double wKplus1 = 0.0;
-    double wIminus1 = 0.0;
-    double wJminus1 = 0.0;
-    double wKminus1 = 0.0;
-
+    //    where |x| = 1-norm
+    vec3 w(wX(i,j,k), wY(i,j,k), wZ(i,j,k));
+    
+    // get neighboring cells
+    //  if border use, replicate the cell data
+    vec3 wIplus1(w), wJplus1(w), wKplus1(w);
+    vec3 wIminus1(w), wJminus1(w), wKminus1(w);
     if (i + 1 < xdim) {
-      wIplus1 = wX(i+1,j,k);
-    }
-    if (i - 1 > 0) {
-      wIminus1 = wX(i-1,j,k);
-    }
-
+      wIplus1 = vec3(wX(i+1,j,k), wY(i+1,j,k), wZ(i+1,j,k));
+    } 
     if (j + 1 < ydim) {
-      wJplus1 = wY(i,j+1,k);
+      wJplus1 = vec3(wX(i,j+1,k), wY(i,j+1,k), wZ(i,j+1,k));
     }
-    if (j - 1 > 0) {
-      wJminus1 = wY(i,j-1,k);
-    }
-    
     if (k + 1 < zdim) {
-      wKplus1 = wZ(i,j,k+1);
+      wKplus1 = vec3(wX(i,j,k+1), wY(i,j,k+1), wZ(i,j,k+1));
     }
-    if (k - 1 > 0) {
-      wKminus1 = wY(i,j,k-1);
+    if (i - 1 >= 0) {
+      wIminus1 = vec3(wX(i-1,j,k), wY(i-1,j,k), wZ(i-1,j,k));
+    }
+    if (j - 1 >= 0) {
+      wJminus1 = vec3(wX(i,j-1,k), wY(i,j-1,k), wZ(i,j-1,k));
+    }
+    if (k - 1 >= 0) {
+      wKminus1 = vec3(wX(i,j,k-1), wY(i,j,k-1), wZ(i,j,k-1));
     }
 
-    
-    // get world coordinate
-    vec3 pt(i,j,k);
-    pt *= theCellSize;
-    pt += vec3(1.0,1.0,1.0) * (0.5*theCellSize);
-    vec3 ptIplus1 = pt + vec3(1.0,0.0,0.0)*theCellSize;
-    vec3 ptJplus1 = pt + vec3(0.0,1.0,0.0)*theCellSize;
-    vec3 ptKplus1 = pt + vec3(0.0,0.0,1.0)*theCellSize;
-    vec3 ptIminus1 = pt + vec3(1.0,0.0,0.0)*theCellSize;
-    vec3 ptJminus1 = pt + vec3(0.0,1.0,0.0)*theCellSize;
-    vec3 ptKminus1 = pt + vec3(0.0,0.0,1.0)*theCellSize;
-    wIplus1 = wX.interpolate(ptIplus1);
-    wJplus1 = wX.interpolate(ptJplus1);
-    wKplus1 = wX.interpolate(ptKplus1);
-    wIminus1 = wX.interpolate(ptIminus1);
-    wJminus1 = wX.interpolate(ptJminus1);
-    wKminus1 = wX.interpolate(ptKminus1);
-
-    
-    gwX(i,j,k) = (abs(wIplus1) - abs(wIminus1))/(2*theCellSize);
-    gwY(i,j,k) = (abs(wJplus1) - abs(wJminus1))/(2*theCellSize);
-    gwZ(i,j,k) = (abs(wKplus1) - abs(wKminus1))/(2*theCellSize);
+    gwX(i,j,k) = (wIplus1.SqrLength() - wIminus1.SqrLength())/(2*theCellSize);
+    gwY(i,j,k) = (wJplus1.SqrLength() - wJminus1.SqrLength())/(2*theCellSize);
+    gwZ(i,j,k) = (wKplus1.SqrLength() - wKminus1.SqrLength())/(2*theCellSize);
 
     
     // normalize
-    double div = sqrt(gwX(i,j,k)*gwX(i,j,k) + gwY(i,j,k)*gwY(i,j,k) + gwZ(i,j,k)*gwZ(i,j,k)) + 10e-20;
+    vec3 gw(gwX(i,j,k), gwY(i,j,k), gwZ(i,j,k));
+    double div = gw.Length() + 10e-20;
     gwX(i,j,k) = gwX(i,j,k) / div;
     gwY(i,j,k) = gwY(i,j,k) / div;
     gwZ(i,j,k) = gwZ(i,j,k) / div;
@@ -521,14 +495,74 @@ void MACGrid::computeVorticityConfinement(double dt) {
     // compute force
     // f = epsilon * dx * (N cross w);
     vec3 n(gwX(i,j,k), gwY(i,j,k), gwZ(i,j,k));
-    vec3 w(wX(i,j,k), wY(i,j,k), wZ(i,j,k));
     vec3 fconf = vorticityEpsilon * (n ^ w);
-    
 
-    // update velocities
+    // store forces
+    fX(i,j,k) = fconf[0];
+    fY(i,j,k) = fconf[1];
+    fZ(i,j,k) = fconf[2];
+  }
+
+  // update velocities
+  FOR_EACH_FACE_X {
+    // do not add forces to the edge faces
+    if (i > 0 && i < xdim) {
+      // get world pt
+      vec3 pt(i,j,k);
+      pt *= theCellSize;
+      pt += vec3(0.0,1.0,1.0) * (0.5*theCellSize);
+      
+      // get interpolated force at face
+      double f = fX.interpolate(pt);
+
+      // update velocity
+      target.mU(i,j,k) = mU(i,j,k) + dt * f;
+      dmU(i,j,k) = dt * f;
+    } else {
+      dmU(i,j,k) = 0;
+    }
+  }
+
+  FOR_EACH_FACE_Y {
+    // do not add forces to the edge faces
+    if (j > 0 && j < ydim) {
+      // get world pt
+      vec3 pt(i,j,k);
+      pt *= theCellSize;
+      pt += vec3(1.0,0.0,1.0) * (0.5*theCellSize);
+      
+      // get interpolated force at face
+      double f = fY.interpolate(pt);
+
+      // update velocity
+      target.mV(i,j,k) = mV(i,j,k) + dt * f;
+      dmV(i,j,k) = dt * f;
+    } else {
+      dmV(i,j,k) = 0;
+    }
+  }
+
+  FOR_EACH_FACE_Z {
+    // do not add forces to the edge faces
+    if (k > 0 && k < zdim) {
+      // get world pt
+      vec3 pt(i,j,k);
+      pt *= theCellSize;
+      pt += vec3(1.0,1.0,0.0) * (0.5*theCellSize);
+      
+      // get interpolated force at face
+      double f = fZ.interpolate(pt);
+
+      // update velocity
+      target.mW(i,j,k) = mW(i,j,k) + dt * f;
+      dmW(i,j,k) = dt * f;
+    } else {
+      dmW(i,j,k) = 0;
+    }
   }
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_VORT__
   printf("-----------------------------------------------------\n");
   printf("gwX:\n");
   print_grid_data(gwX);
@@ -536,6 +570,21 @@ void MACGrid::computeVorticityConfinement(double dt) {
   print_grid_data(gwY);
   printf("gwZ:\n");
   print_grid_data(gwZ);
+  printf("fX:\n");
+  print_grid_data(fX);
+  printf("fY:\n");
+  print_grid_data(fY);
+  printf("fZ:\n");
+  print_grid_data(fZ);
+  /*
+  printf("dmU:\n");
+  print_grid_data(dmU);
+  printf("dmV:\n");
+  print_grid_data(dmV);
+  printf("dmW:\n");
+  print_grid_data(dmW);
+  */
+  #endif
   #endif
 
 
@@ -593,10 +642,11 @@ void MACGrid::project(double dt) {
 
   // solve for new pressures such that the fluid remains incompressible
   // TODO: what maxIterations and tolerance to use?
-  bool ret = conjugateGradient(A, target.mP, d, 10000, 0.001);
+  bool ret = conjugateGradient(A, target.mP, d, 10000, 0.0001);
 
 
   #ifdef __DPRINT__
+  #ifdef __DPRINT_PROJECT__
   printf("***********************************************************************************\n");
   printf("Project: %s\n", ret ? "true" : "false");
   //printf("A:\n");
@@ -605,6 +655,7 @@ void MACGrid::project(double dt) {
   print_grid_data_as_column(d);
   printf("mP:\n");
   print_grid_data_as_column(target.mP);
+  #endif
   #endif
 
 
@@ -637,7 +688,40 @@ void MACGrid::project(double dt) {
   mV = target.mV;
   mW = target.mW;
   // IMPLEMENT THIS AS A SANITY CHECK: assert (checkDivergence());
+  //assert(checkDivergence());
+  if (!checkDivergence()) {
+    ///exit(0);
+  }
 }
+
+bool MACGrid::checkDivergence() {
+  double sum = 0;
+  bool ret = true;
+  FOR_EACH_FACE_X {
+    sum += mU(i,j,k);
+  }
+  if (abs(sum) > 10e-6) {
+    printf("X vel DIVERGENT: %f\n", sum); 
+    ret = false;
+  }
+  FOR_EACH_FACE_Y {
+    sum += mV(i,j,k);
+  }
+  if (abs(sum) > 10e-6) {
+    printf("Y vel DIVERGENT: %f\n", sum); 
+    ret = false;
+  }
+  FOR_EACH_FACE_Z {
+    sum += mW(i,j,k);
+  }
+  if (abs(sum) > 10e-6) {
+    printf("Z vel DIVERGENT: %f\n", sum); 
+    ret = false;
+  }
+  fflush(stdout);
+  return ret; 
+}
+
 
 vec3 MACGrid::getVelocity(const vec3& pt) {
    vec3 vel;

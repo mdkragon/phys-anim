@@ -76,6 +76,8 @@ protected:
 	void apply(const GridDataMatrix & matrix, const GridData & vector, GridData & result);
 	bool isValidCell(int i, int j, int k);
 
+  bool checkDivergence();
+
 	// Fluid grid cell properties:
 	GridDataX mU; // X component of velocity, stored on X faces, size is (dimX+1)*dimY*dimZ
 	GridDataY mV; // Y component of velocity, stored on Y faces, size is dimX*(dimY+1)*dimZ

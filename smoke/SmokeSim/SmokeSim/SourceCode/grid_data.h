@@ -11,6 +11,8 @@
 #include "constants.h"
 #include <stdio.h>
 
+#define SIGN(x) (x >= 0 ? +1 : -1)
+
 // GridData is capable of storing any data in a grid
 // Columns are indexed with i and increase with increasing x
 // Rows are indexed with j and increase with z
@@ -36,6 +38,8 @@ public:
    // E.g. to set data on this object, call mygriddata(i,j,k) = newval
    virtual double& operator()(int i, int j, int k);
    virtual const double operator()(int i, int j, int k) const;
+
+   virtual double cubic_interp(double fm1, double f0, double f1, double f2, double dfrac);
 
    // Given a point in world coordinates, return the corresponding
    // value from this grid. mDfltValue is returned for points

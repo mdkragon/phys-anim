@@ -3,6 +3,12 @@
 
 // enable debug printing?
 #define __DPRINT__
+//#define __DPRINT_PROJECT__
+//#define __DPRINT_ADVTEMP__
+//#define __DPRINT_ADVDENS__
+//#define __DPRINT_ADVVEL__
+//#define __DPRINT_BUOY__
+//#define __DPRINT_VORT__
 
 // print 3d matrix
 /*
