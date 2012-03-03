@@ -18,6 +18,8 @@ extern const double fluidDensity;
 extern const double buoyAlpha;
 extern const double buoyBeta;
 extern const double Tamb; 
+extern const double Tmin; 
+extern const double Tmax; 
 extern const double vorticityEpsilon; 
 
 #endif

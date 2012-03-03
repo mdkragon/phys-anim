@@ -130,6 +130,14 @@ void MACGrid::updateSources() {
   //mT(0,1,0) = 50.0;
   //mD(0,0,0) = 1.0;
 
+  mU(1,0,0) = 2.0;
+  //mU(38,39,0) = -2.0;
+  mD(0,0,0) = 1.0;
+  mD(39,39,0) = 1.0;
+  mT(0,0,0) = 50.0;
+  mT(39,39,0) = -50.0;
+
+  /*
   mD(4,4,4) = 1.0;
   mD(4,5,4) = 1.0;
   mD(4,4,5) = 1.0;
@@ -139,10 +147,15 @@ void MACGrid::updateSources() {
   mT(4,4,5) = 100.0;
   mT(4,5,5) = 100.0;
 
-  mU(5,4,4) = 1.0;
-  mU(5,5,4) = 1.0;
-  mU(5,4,5) = 1.0;
-  mU(5,5,5) = 1.0;
+  mU(5,4,4) = 4.0;
+  mU(5,5,4) = 4.0;
+  mU(5,4,5) = 4.0;
+  mU(5,5,5) = 4.0;
+  */
+
+  if (count >= 1) {
+    //exit(0);
+  }
 
   count += 1;
 }
@@ -152,6 +165,10 @@ void MACGrid::advectVelocity(double dt) {
   target.mU = mU;
   target.mV = mV;
   target.mW = mW;
+
+  GridData iX(mU);
+  GridData iY(mU);
+  GridData iZ(mU);
 
   // iterate over each Z face
   FOR_EACH_FACE_X {
@@ -163,6 +180,12 @@ void MACGrid::advectVelocity(double dt) {
 
     // get full dimensional velocity
     vec3 vel = getVelocity(pt);
+    //pt.Print("pt: ");
+    //vel.Print("vel: ");
+    //fflush(stdout);
+    iX(i,j,k) = vel[0];
+    iY(i,j,k) = vel[1];
+    iZ(i,j,k) = vel[2];
 
     // do backwards euler step
     vec3 bpt = pt - dt * vel;
@@ -175,6 +198,7 @@ void MACGrid::advectVelocity(double dt) {
   }
 
 
+  //printf("y:\n");
   // iterate over each Y face
   FOR_EACH_FACE_Y {
     // actual grid point
@@ -185,6 +209,9 @@ void MACGrid::advectVelocity(double dt) {
 
     // get full dimensional velocity
     vec3 vel = getVelocity(pt);
+    //pt.Print("pt: ");
+    //vel.Print("vel: ");
+    //fflush(stdout);
 
     // do backwards euler step
     vec3 bpt = pt - dt * vel;
@@ -227,6 +254,12 @@ void MACGrid::advectVelocity(double dt) {
   print_grid_data(mV);
   printf("mW:\n");
   print_grid_data(mW);
+  printf("iX:\n");
+  print_grid_data(iX);
+  printf("iY:\n");
+  print_grid_data(iY);
+  printf("iZ:\n");
+  print_grid_data(iZ);
   printf("target.mU:\n");
   print_grid_data(target.mU);
   printf("target.mV:\n");
@@ -494,9 +527,19 @@ void MACGrid::computeVorticityConfinement(double dt) {
       wKminus1 = vec3(wX(i,j,k-1), wY(i,j,k-1), wZ(i,j,k-1));
     }
 
+    /*
     gwX(i,j,k) = (wIplus1.SqrLength() - wIminus1.SqrLength())/(2*theCellSize);
     gwY(i,j,k) = (wJplus1.SqrLength() - wJminus1.SqrLength())/(2*theCellSize);
     gwZ(i,j,k) = (wKplus1.SqrLength() - wKminus1.SqrLength())/(2*theCellSize);
+    */
+
+    
+
+    gwX(i,j,k) = ((abs(wIplus1[0]) + abs(wIplus1[1]) + abs(wIplus1[2])) - (abs(wIminus1[0]) + abs(wIminus1[1]) + abs(wIminus1[2]))) / (2*theCellSize); 
+    gwY(i,j,k) = ((abs(wJplus1[0]) + abs(wJplus1[1]) + abs(wJplus1[2])) - (abs(wJminus1[0]) + abs(wJminus1[1]) + abs(wJminus1[2]))) / (2*theCellSize); 
+    gwZ(i,j,k) = ((abs(wKplus1[0]) + abs(wKplus1[1]) + abs(wKplus1[2])) - (abs(wKminus1[0]) + abs(wKminus1[1]) + abs(wKminus1[2]))) / (2*theCellSize); 
+    
+
 
     
     // normalize
@@ -704,7 +747,7 @@ void MACGrid::project(double dt) {
   // IMPLEMENT THIS AS A SANITY CHECK: assert (checkDivergence());
   //assert(checkDivergence());
   if (!checkDivergence()) {
-    ///exit(0);
+    //exit(0);
   }
 }
 
@@ -715,21 +758,21 @@ bool MACGrid::checkDivergence() {
     sum += mU(i,j,k);
   }
   if (abs(sum) > 10e-6) {
-    printf("X vel DIVERGENT: %f\n", sum); 
+    //printf("X vel DIVERGENT: %f\n", sum); 
     ret = false;
   }
   FOR_EACH_FACE_Y {
     sum += mV(i,j,k);
   }
   if (abs(sum) > 10e-6) {
-    printf("Y vel DIVERGENT: %f\n", sum); 
+    //printf("Y vel DIVERGENT: %f\n", sum); 
     ret = false;
   }
   FOR_EACH_FACE_Z {
     sum += mW(i,j,k);
   }
   if (abs(sum) > 10e-6) {
-    printf("Z vel DIVERGENT: %f\n", sum); 
+    //printf("Z vel DIVERGENT: %f\n", sum); 
     ret = false;
   }
   fflush(stdout);
@@ -1019,7 +1062,56 @@ vec4 MACGrid::getRenderColor(int i, int j, int k) {
 vec4 MACGrid::getRenderColor(const vec3& pt) {
   // TODO: Modify this if you want to change the smoke color, or modify it based on other smoke properties.
   double value = getDensity(pt); 
+
   return vec4(1.0, 1.0, 1.0, value);
+
+  /*
+  double temp = getTemperature(pt);
+  temp = max(Tmin, min(temp, Tmax));
+  double v = 0.75;
+  double s = 0.75;
+
+  double hh = 6 * (temp - Tmin)/(Tmax - Tmin);
+  int i = hh;
+  double ff = hh - i;
+  double p = v * (1.0 - s);
+  double q = v * (1.0 - (s * ff));
+  double t = v * (1.0 - (s * (1.0 - ff)));
+
+  double r = 0;
+  double g = 0;
+  double b = 0;
+
+  switch (i) { 
+    case 0:
+      r = v;
+      g = t;
+      b = p;
+    case 1:
+      r = q;
+      g = v;
+      b = p;
+    case 2:
+      r = p;
+      g = v;
+      b = t;
+    case 3:
+      r = p;
+      g = q;
+      b = v;
+    case 4:
+      r = t;
+      g = p;
+      b = v;
+    case 5:
+      r = v;
+      g = p;
+      b = q;
+  }
+
+  //return vec4(r, g, b, value);
+  return vec4(b, g, r, value);
+  */
 }
 
 void MACGrid::drawZSheets(bool backToFront)

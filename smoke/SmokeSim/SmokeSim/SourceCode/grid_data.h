@@ -11,7 +11,7 @@
 #include "constants.h"
 #include <stdio.h>
 
-#define SIGN(x) (x >= 0 ? +1 : -1)
+#define SIGN(x) (x > 0 ? +1 : (x < 0 ? -1 : 0))
 
 // GridData is capable of storing any data in a grid
 // Columns are indexed with i and increase with increasing x
