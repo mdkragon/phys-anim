@@ -22,8 +22,8 @@ void SmokeSim::reset() {
 void SmokeSim::step() {
   static int count = 0;
 
-  //double dt = 0.04;//0.1;
-  double dt = 0.1;
+  double dt = 0.04;//0.1;
+  //double dt = 0.1;
 
   // Step0: Gather user forces
   mGrid.updateSources();

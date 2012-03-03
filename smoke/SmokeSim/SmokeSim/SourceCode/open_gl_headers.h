@@ -12,14 +12,15 @@
 
 #else
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+//#include <GL/gl.h>
+//#include <GL/glu.h>
+//#include <GL/glut.h>
+
 
 // WINDOWS:
-//#include <windows.h>
-//#include <gl/GL.h>
-//#include <gl/GLU.h>
-//#include <gl/glut.h>
+#include <windows.h>
+#include <gl/GL.h>
+#include <gl/GLU.h>
+#include "glut.h"
 
 #endif
