@@ -1,5 +1,10 @@
 Jordan Brindza CIS 563 - Smoke Simulation
 
+I implemented all the base parts of the assignment. I attempted to do the cubic
+interpolation but there is not working correctly.
+
+The program compiles under MCVS 2010 in the moore labs
+
 1)  Describe the difference between Lagrangian and Eulerian viewpoints for
     simulation.  Why is the approach used in this assignment called Semi-Lagragian?
 
@@ -16,17 +21,30 @@ Jordan Brindza CIS 563 - Smoke Simulation
     are similar and how they are different.  
 
   Smoke and water simulation are similar in that they both satisfy the
-  Navier-Stokes equations for fluids. 
+  Navier-Stokes equations for fluids.
 
   They are different because water has a well defined surface that does not
-  exist in smoke. 
+  exist in smoke. The boundary between air and the fluid for water needs to be
+  maintained. This can be done with using marker particles or level sets with
+  the grid based approach.
+
 
 3)  List one advantage and one disadvantage to simulating our fluid on a grid.
     Describe two other techniques for simulating fluids and the advantages and
     disadvantages of each.
 
-  One advantage to using a grid is that it makes computing the 
+  One advantage to using a grid is that it makes computing the material
+  derivates much easier than it would be in a particle based system. A big
+  disadvantage to the grid is the computation and memory required to maintain
+  it. There are also artifacts created by the grid discritization.
 
-  One advantage to simulating the fluid on a grid is that it is computationally
-  efficient (cpu time and memory). One Disadvantage is the grid creates 
+  One other technique is to use height fields. This technique is very efficient
+  and can be done in real time and is very easy to implement. However, height
+  fields require additional particle system for dealing with droplets/areas of
+  the fluid that break away increasing its complexitiy. 
+  
+  Another technique is to use a fully particle based system. These are good for
+  simulating splashes or streams of fluids. The do not scale well for large
+  areas of water and computing the interactions between the particles is
+  computationally intensive.
 
