@@ -30,6 +30,7 @@ Torus Knot Software Ltd.
 #ifndef OGREMATH_H
 #define OGREMATH_H
 
+#include <math.h>
 #include "OgreVector2.h"
 #include "OgreVector3.h"
 #include "OgreVector4.h"

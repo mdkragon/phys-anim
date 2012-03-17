@@ -31,6 +31,7 @@ Torus Knot Software Ltd.
 
 #include "OgreCommon.h"
 #include "OgreQuaternion.h"
+#include <math.h>
 
 namespace Ogre
 {
