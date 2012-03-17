@@ -189,6 +189,26 @@ TEST(AdvanceVelocities, World)
 
 void World::AdvanceVelocities(float dT)
 {
+	Vector3 g(0.0, -9.8, 0.0);
+
+	// TODO compute new linear velocities and angular momentum
+	for(int i = 0; i < GetNumBodies(); i++)
+	{
+		RigidBody *body = GetBody(i);
+		if (!body->HasInfiniteMass()) {
+			// P: LINEAR MOMENTUM
+			// change in linear momentum is the force acting on the object
+			// The only forces we have are from gravity and collisions
+			// TODO: update velocity based on collisions
+			body->SetVelocity(body->GetVelocity() + dT*g);
+				
+			// L: ANGULAR MOMEMTUM
+			// change in angular momentum is the torque acting on the object
+			//	Torques on the object will be a result of collisions
+			// TODO: update angular velocity based on collision
+			body->ApplyQueuedImpulses();
+		}
+	}
 }
 
 void World::ResolveContacts(float dT)
@@ -314,41 +334,49 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	Vector3 locA = i.bodyA->GetTransformation()*i.contactPointA;
 	Vector3 locB = i.bodyB->GetTransformation()*i.contactPointB;
 
-	Vector3 urel = Vector3::ZERO;
-	float ureln = 0;
-	if(ureln > 0)
-	{
+	// relative velocity of the collision point
+	// TODO: is the relative velocity correct?
+	Vector3 urel = a.GetVelocity(); - b.GetVelocity();
+	float ureln = urel.dotProduct(N);
+	// if ureln is positive the objects are moving away from each other?
+	if(ureln > 0) {
 		return;
 	}
-	Vector3 urelT = Vector3::ZERO;
-	Vector3 T = Vector3::ZERO;
+
+	// tangential component of the relative velocity
+	Vector3 urelT = urel - ureln * N;
+	// T is the normalized vector of the tangential velocity
+	Vector3 T = urelT.normalisedCopy();
 
 	Matrix3 Ka = CalcK(a, locA-a.GetPosition());
 	Matrix3 Kb = CalcK(b, locB-b.GetPosition());
-	Matrix3 KT = Matrix3::ZERO;
-	float mu = 0;
+	// TODO: I think KT is just the sum of the K's
+	Matrix3 KT = Ka + Kb;
+	// TODO: mu is the coefficient of friction?
+	//	setting it to zero for now to test frictionless intersections
+	//float mu = 0;
+	float mu = std::min(a.GetMaterial()->friction, b.GetMaterial()->friction);
 
 	// try with sticking collision (zero tangential motion after collision)
-	Vector3 uprimerel1 = Vector3::ZERO;
-	Vector3 j = Vector3::ZERO; // As in paragraph 7, section 1: u'rel = urel + KT*j
-	float jdotN = 0;
-	if((j-jdotN*N).squaredLength() < mu*mu*jdotN*jdotN)
-	{
+	//  i.e. uprime_relt = 0
+	//		then uprime_rel = -epsilon * ureln * N
+	Vector3 uprimerel1 = -epsilon * ureln * N;
+	// impulse j is calculated as u'rel = urel + KT*j
+	//	(Paragraph 7, section 1)
+	Vector3 j = KT.Inverse() * (uprimerel1 - urel);
+	float jdotN = j.dotProduct(N);
+	if((j-jdotN*N).squaredLength() < mu*mu*jdotN*jdotN)	{
 		// sticking collision; j is acceptable
+	} else {
+		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
+		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
+		j = jn * N - mu * jn * T;
 	}
-	else
-	{
-		float jn = 0;
-		j = Vector3::ZERO;
-	}
-
-	if(immediate)
-	{
+	
+	if(immediate) {
 		a.ApplyImpulse(j, locA);
 		b.ApplyImpulse(-j, locB);
-	}
-	else
-	{
+	} else {
 		a.QueueImpulse(j, locA);
 		b.QueueImpulse(-j, locB);
 	}
@@ -399,7 +427,6 @@ void World::FindIntersections(std::vector<Intersection> & intersections)
 
 	// LOOK this method is slow and not acceptable for a final project, but it works
 	// (slowly) and may help you test other parts
-/*
 	for(int i=0; i<GetNumBodies(); i++)
 	{
 		for(int j=i+1; j<GetNumBodies(); j++)
@@ -407,5 +434,4 @@ void World::FindIntersections(std::vector<Intersection> & intersections)
 			FindIntersection(GetBody(i), GetBody(j), intersections);
 		}
 	}
-	*/
 }

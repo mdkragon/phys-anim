@@ -37,7 +37,16 @@ TEST(GetNormalLocalInertialTensor, Box)
 }
 Vector3 Box::GetNormalLocalInertialTensor() const
 {
-	return Vector3::ZERO; // TODO
+	// TODO: is this correct? I am not sure what the 'Normal' Inertial Tensor is
+	// interial matrix for box is
+	//				 | (y^2 + z^2)      0           0      |
+	//	I = (M/12) * |      0      (x^2 + z^2)      0      |
+	//				 |      0           0      (x^2 + y^2) |
+	Vector3 size = 2*GetHalfSize();
+	float x2 = size.x * size.x;
+	float y2 = size.y * size.y;
+	float z2 = size.z * size.z;
+	return (GetNormalMass()/12.0) * Vector3((y2+z2), (x2+z2), (x2+y2));
 }
 
 float Box::GetNormalMass() const

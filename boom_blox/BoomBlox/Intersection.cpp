@@ -464,7 +464,47 @@ namespace
 	// pick one of the corners; this would lead to unwanted torquing.
 	void FindIntersectionBoxGround(Box * box, Ground * ground, std::vector<Intersection> & intersections)
 	{
-		// TODO 
+		// the box is always considered the penetrator.
+		Vector3 bp = box->GetPosition();
+		Vector3 gp = ground->GetPosition();
+		
+		// compute contact point as the geometric center of all
+		//	contacting corners
+		Matrix4 T = box->GetTransformation();
+		Vector3 halfSize = box->GetHalfSize();
+		float x = halfSize.x;
+		float y = halfSize.y;
+		float z = halfSize.z;
+
+		// determine corners that are below the ground plane
+		// get corner points in the world frame
+		std::vector<Vector3> corners(8);
+		corners[0] = T * Vector3(x, y, z);
+		corners[1] = T * Vector3(-x, y, z);
+		corners[2] = T * Vector3(x, -y, z);
+		corners[3] = T * Vector3(x, y, -z);
+		corners[4] = T * Vector3(-x, -y, z);
+		corners[5] = T * Vector3(-x, y, -z);
+		corners[6] = T * Vector3(x, -y, -z);
+		corners[7] = T * Vector3(-x, -y, -z);
+		
+		Vector3 p = Vector3::ZERO;
+		int ncorner = 0;
+		for (int i = 0; i < 8; i++) {
+			if (corners[i].y < gp.y + 1e-4f) {
+				p += corners[i];
+				ncorner += 1;
+			}
+		}
+
+		if (ncorner > 0) {
+			p /= ncorner;
+					
+			// out vector is always the normal to the plane
+			Vector3 v = Vector3(0.0, 1.0, 0.0);
+			
+			intersections.push_back(Intersection(box, ground, p, v));
+		}		
 	}
 
 	TEST(FindIntersectionBoxSphere, Intersection)
@@ -540,7 +580,26 @@ namespace
 	// The contact point should be the deepest point of intersection
 	void FindIntersectionGroundSphere(Ground * ground, Sphere * sphere, std::vector<Intersection> & intersections)
 	{
-		// TODO
+		// the sphere is always considered the penetrator.
+		
+		Vector3 sp = sphere->GetPosition();
+		float r = sphere->GetRadius();
+		Vector3 gp = ground->GetPosition();
+
+		// ground plane normal is (0, 1, 0)
+		//	y is up
+		// only need to check y component
+		float dy = sp.y - gp.y;
+
+		if (dy < r + 1e-4f) {
+			// contact point is on the sphere point furthest into the ground
+			sp.y -= r;
+			// out vector is the vector from the contact point back to the ground
+			Vector3 v = Vector3(0.0, 1.0, 0.0);
+			v.normalise();
+
+			intersections.push_back(Intersection(sphere, ground, sp, v));
+		}
 	}
 
 	TEST(FindIntersectionSphereSphere, Intersection)
@@ -575,7 +634,25 @@ namespace
 	// For sphere intersection, the contact point should be the midpoint between the two sphere centers
 	void FindIntersectionSphereSphere(Sphere * sphere, Sphere * sphere2, std::vector<Intersection> & intersections)
 	{
-		// TODO
+		// the first sphere is always considered the penetrator.
+		
+		Vector3 sp = sphere->GetPosition();
+		Vector3 sp2 = sphere2->GetPosition();
+		float r = sphere->GetRadius();
+		float r2 = sphere2->GetRadius();
+
+
+		Vector3 d = sp2 - sp;
+		float sqDist = d.squaredLength();
+		if (sqDist < (r+r2)*(r+r2) + 1e-4f) {
+			// contact point is the midpoint between the spheres
+			Vector3 p = sp + d/2.0;
+			// out vector is the vector from the contact point to center of sphere 1
+			Vector3 v = p - sp;
+			v.normalise();
+
+			intersections.push_back(Intersection(sphere2, sphere, p, v));
+		}
 	}
 
 	TEST(ComputeOverlap, Intersection)
@@ -592,7 +669,7 @@ namespace
 	{
 		if(!(b >= a && d >= c))
 		{
-			__debugbreak();
+  			__debugbreak();
 		}
 		assert(b >= a);
 		assert(d >= c);

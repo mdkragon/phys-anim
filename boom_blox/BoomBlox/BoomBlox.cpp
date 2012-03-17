@@ -13,6 +13,9 @@
 #include <utility>
 #include "Material.h"
 #include "WorldLoader.h"
+#include <windef.h>
+#include <commdlg.h>
+#include <MMSystem.h>
 
 void SetupGraphics();
 void RunGame();
@@ -30,6 +33,7 @@ int main(int argc, char** argv)
 	SetupGraphics();
 
 	// LOOK if you wanted, you could load a level right here for testing
+	LoadWorldIntoGame("../Worlds/smallstack.xml");
 
 	RunGame();
 }
@@ -251,9 +255,11 @@ void idle()
 
 	dT = std::min(dT, 0.03f);
 
-	g_world.Simulate(dT);
+	
 	// LOOK fixed timesteps are much easier to debug
-//	g_world.Simulate(0.03f);
+	g_world.Simulate(dT);
+	//g_world.Simulate(0.03f);
+
 	g_stepNum++;
 	glutPostRedisplay();
 }
