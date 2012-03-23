@@ -201,7 +201,7 @@ void World::AdvanceVelocities(float dT)
 			// The only forces we have are from gravity and collisions
 			// TODO: update velocity based on collisions
 			body->SetVelocity(body->GetVelocity() + dT*g);
-				
+
 			// L: ANGULAR MOMEMTUM
 			// change in angular momentum is the torque acting on the object
 			//	Torques on the object will be a result of collisions
@@ -354,25 +354,24 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	Matrix3 Kb = CalcK(b, locB-b.GetPosition());
 	// TODO: I think KT is just the sum of the K's
 	Matrix3 KT = Ka + Kb;
-	// TODO: mu is the coefficient of friction?
-	//	setting it to zero for now to test frictionless intersections
-	//float mu = 0;
+	// mu is the coefficient of friction?
 	float mu = std::max(a.GetMaterial()->friction, b.GetMaterial()->friction);
 
 	// try with sticking collision (zero tangential motion after collision)
 	//  i.e. uprime_relt = 0
 	//		then uprime_rel = -epsilon * ureln * N
 	Vector3 uprimerel1 = -epsilon * ureln * N;
+
 	// impulse j is calculated as u'rel = urel + KT*j
 	//	(Paragraph 7, section 1)
 	Vector3 j = KT.Inverse() * (uprimerel1 - urel);
 	float jdotN = j.dotProduct(N);
-	if((j-jdotN*N).squaredLength() < mu*mu*jdotN*jdotN)	{
+	if((j-jdotN*N).squaredLength() <= mu*mu*jdotN*jdotN)	{
 		// sticking collision; j is acceptable
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
-		j = jn * N - mu * jn * T;
+		j = jn * N - mu * jn * T;		
 	}
 
 	/*
