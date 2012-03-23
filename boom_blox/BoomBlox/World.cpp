@@ -334,12 +334,14 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	Vector3 locA = i.bodyA->GetTransformation()*i.contactPointA;
 	Vector3 locB = i.bodyB->GetTransformation()*i.contactPointB;
 
+
 	// relative velocity of the collision point
 	// TODO: is the relative velocity correct?
-	Vector3 urel = a.GetVelocity(); - b.GetVelocity();
+	Vector3 urel = a.GetVelocity() - b.GetVelocity();
 	float ureln = urel.dotProduct(N);
 	// if ureln is positive the objects are moving away from each other?
 	if(ureln > 0) {
+		//std::cout << "Skipping intersection ureln: " << ureln << std::endl;
 		return;
 	}
 
@@ -355,7 +357,7 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	// TODO: mu is the coefficient of friction?
 	//	setting it to zero for now to test frictionless intersections
 	//float mu = 0;
-	float mu = std::min(a.GetMaterial()->friction, b.GetMaterial()->friction);
+	float mu = std::max(a.GetMaterial()->friction, b.GetMaterial()->friction);
 
 	// try with sticking collision (zero tangential motion after collision)
 	//  i.e. uprime_relt = 0
@@ -372,7 +374,15 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
 		j = jn * N - mu * jn * T;
 	}
-	
+
+	/*
+	if ((a.id == 3 && b.id == 2) || (a.id == 3 && b.id == 2)) {
+		printf("resolving intersection between %d and %d\n", a.id, b.id);
+		std::cout << "j: " << j << "\tlocA: " << locA << std::endl;
+		fflush(stdout);
+	}
+	*/
+
 	if(immediate) {
 		a.ApplyImpulse(j, locA);
 		b.ApplyImpulse(-j, locB);
