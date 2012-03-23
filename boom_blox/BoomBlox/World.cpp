@@ -206,7 +206,7 @@ void World::AdvanceVelocities(float dT)
 			// change in angular momentum is the torque acting on the object
 			//	Torques on the object will be a result of collisions
 			// TODO: update angular velocity based on collision
-			body->ApplyQueuedImpulses();
+			//body->ApplyQueuedImpulses();
 		}
 	}
 }
