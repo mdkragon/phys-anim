@@ -1,0 +1,31 @@
+Jordan Brindza
+HW3 - BoomBlox
+CIS 563
+
+1. In class, we talked about problems with contact processing stacks of objects.
+Naively, you would have to do many iteractions to resolve contact problems with
+stacks. How does shock propagation help solve this problem? 
+
+2. Explain the trade-offs encountered between a bounding sphere and using the
+convex hull? 
+
+  The bounding sphere has the advantage of being quicker to compute possible
+  collisions between objects then using the convex hull. However, the convex
+  hull is a better approximation of the objects actual shape so it has less
+  false positive, possible collisions when used. 
+
+  Another downside to the convex hall is that it is difficult to compute for
+  arbitrary objects, but it is only an initial time investment at the beginning
+  of the simulation and the convex halls can be cached.
+
+3. Can you theorize a better way to pick the best sweep directions in SaP(sweep
+and prune), talked about in class? We have assumed in class we will just naively
+use the three coordinate axes as the sweep direction. But in general this gives
+a poor result.
+
+4. How would you combine particles and rigid bodies to simulate granular
+particles such as sand or dust? Granular particles exhibit both rigid body and
+particle properties so a naive SPH implmenetation would not look realistic out
+of the box.
+
+

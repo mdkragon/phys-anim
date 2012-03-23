@@ -34,6 +34,8 @@ int main(int argc, char** argv)
 
 	// LOOK if you wanted, you could load a level right here for testing
 	LoadWorldIntoGame("../Worlds/smallstack.xml");
+	//LoadWorldIntoGame("../Worlds/seesaw.xml");
+	//LoadWorldIntoGame("../Worlds/click.xml");
 
 	RunGame();
 }

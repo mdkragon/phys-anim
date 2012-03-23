@@ -100,6 +100,9 @@ public:
 	// Render to the OpenGL window, including transformations and color, but not including lighting properties.
 	void Render() const;
 
+
+	int id;
+	void SetID(int id);
 protected:
 	// perform geometry rendering (but not color setup or transformation)
 	virtual void DoRender() const = 0;

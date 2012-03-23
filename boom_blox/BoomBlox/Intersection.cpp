@@ -634,7 +634,7 @@ namespace
 	// For sphere intersection, the contact point should be the midpoint between the two sphere centers
 	void FindIntersectionSphereSphere(Sphere * sphere, Sphere * sphere2, std::vector<Intersection> & intersections)
 	{
-		// the first sphere is always considered the penetrator.
+		// the first sphere is always considered the penetrator?
 		
 		Vector3 sp = sphere->GetPosition();
 		Vector3 sp2 = sphere2->GetPosition();

@@ -3,13 +3,17 @@
 #include "World.h"
 #include "WorldLoader.h"
 #include <vector>
+#ifdef __APPLE__
+#else
 #include <windows.h>
+#endif
 
 void LoadWorldIntoGame( std::string const& mbfilename );
 extern World g_world;
 
 void RunBenchmark(std::string const& name, int frames)
 {
+/*
 	timeBeginPeriod(1);
 
 	LoadWorldIntoGame(name);
@@ -30,4 +34,5 @@ void RunBenchmark(std::string const& name, int frames)
 	std::cout.flush();
 
 	timeEndPeriod(1);
+*/
 }

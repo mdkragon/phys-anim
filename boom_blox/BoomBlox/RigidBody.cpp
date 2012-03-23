@@ -16,8 +16,14 @@ RigidBody::RigidBody() :
 	m_material(NULL),
 	m_queuedDeltaVelocity(Vector3::ZERO),
 	m_queuedDeltaAngularVelocity(Vector3::ZERO),
-	m_hasInfiniteMass(false)
+	m_hasInfiniteMass(false),
+	id(0)
 {
+}
+
+void RigidBody::SetID(int id_)
+{
+	id = id_;
 }
 
 Material const* RigidBody::GetMaterial() const

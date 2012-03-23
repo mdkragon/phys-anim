@@ -107,6 +107,16 @@ public:
 			m_curBody = new Sphere(float(r));
 			return true;
 		}
+		else if(element.ValueStr() == "id")
+		{
+			if(!IsBody(element.Parent())) return false;
+			assert(m_curBody != NULL);
+			int id = 0;
+			element.Attribute("id", &id);
+
+			m_curBody->SetID(id);
+			return true;
+		}
 		else if(element.ValueStr() == "pos")
 		{
 			if(!IsBody(element.Parent())) return false;
