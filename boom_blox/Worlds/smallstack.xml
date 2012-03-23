@@ -22,14 +22,46 @@
       <bodymaterial name="blue plastic" />
     </box>
     -->
+    <!--
     <box hx="3" hy="1" hz="3">
       <pos x="0" y="10" z="0" />
       <bodymaterial name="blue plastic" />
     </box>
+    -->
+    
+    <!--
     <box hx="1" hy="1" hz="1">
-      <pos x="0" y="6" z="0" />
+      <pos x="2" y="6" z="2" />
+      <ori theta=".4" x="1" y="1" z="0" />
       <bodymaterial name="blue plastic" />
     </box>
+    -->
+    <!--
+    <sphere r="1">
+      <pos x="0" y="1" z="0" />
+      <avel x="0" y=".1" z="0" />
+      <bodymaterial name="blue plastic" />
+    </sphere>
+    -->
+    <sphere r="1">
+      <pos x="0" y="1" z="0" />
+    
+      <bodymaterial name="blue plastic" />
+    </sphere>
+    <sphere r="1">
+      <pos x=".5" y="3" z="0" />
+    
+      <bodymaterial name="blue plastic" />
+    </sphere>
+    
+    <!--
+    <box hx="1" hy="1" hz="1">
+      <pos x="1" y="1" z="1" />
+      <avel x="0" y=".1" z="0" />
+      <bodymaterial name="blue plastic" />
+    </box>
+    -->
+    
     <!--
     <box hx="1" hy="1" hz="1">
       <pos x="0" y="5" z="0" />
