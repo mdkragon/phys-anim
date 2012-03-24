@@ -337,7 +337,9 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 
 	// relative velocity of the collision point
 	// TODO: is the relative velocity correct?
-	Vector3 urel = a.GetVelocity() - b.GetVelocity();
+	//Vector3 urel = a.GetVelocity() - b.GetVelocity();
+	Vector3 urel = a.GetVelocityAtPoint(locA) - b.GetVelocityAtPoint(locB);
+
 	float ureln = urel.dotProduct(N);
 	// if ureln is positive the objects are moving away from each other?
 	if(ureln > 0) {
