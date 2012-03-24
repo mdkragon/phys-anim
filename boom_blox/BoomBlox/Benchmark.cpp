@@ -13,7 +13,6 @@ extern World g_world;
 
 void RunBenchmark(std::string const& name, int frames)
 {
-/*
 	timeBeginPeriod(1);
 
 	LoadWorldIntoGame(name);
@@ -34,5 +33,4 @@ void RunBenchmark(std::string const& name, int frames)
 	std::cout.flush();
 
 	timeEndPeriod(1);
-*/
 }

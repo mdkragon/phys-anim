@@ -36,8 +36,13 @@ int main(int argc, char** argv)
 	//LoadWorldIntoGame("../Worlds/incoming.xml");
 	//LoadWorldIntoGame("../Worlds/seesaw.xml");
 	LoadWorldIntoGame("../Worlds/click.xml");
+	//LoadWorldIntoGame("../Worlds/smallstack.xml");
+	//LoadWorldIntoGame("../Worlds/seesaw.xml");
+	//LoadWorldIntoGame("../Worlds/click.xml");
+	//LoadWorldIntoGame("../Worlds/dominoes.xml");
 
-	RunGame();
+	//RunGame();
+	RunBenchmark("../Worlds/dominoes.xml", 100);
 }
 
 void display();

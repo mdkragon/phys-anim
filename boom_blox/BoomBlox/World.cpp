@@ -75,6 +75,20 @@ void World::Clear()
 	{
 		delete GetBody(i);
 	}
+	/*
+	for(int i=0; i<m_xExtents.size(); i++)
+	{
+		delete m_xExtents[i];
+	}
+	for(int i=0; i<m_yExtents.size(); i++)
+	{
+		delete m_yExtents[i];
+	}
+	for(int i=0; i<m_zExtents.size(); i++)
+	{
+		delete m_zExtents[i];
+	}
+	*/
 
 	for(int i=0; i<GetNumMaterials(); i++)
 	{
@@ -83,11 +97,26 @@ void World::Clear()
 
 	m_bodies.clear();
 	m_materials.clear();
+
+	m_xExtents.clear();
+	m_yExtents.clear();
+	m_zExtents.clear();
 }
 
 void World::AddBody(RigidBody* body)
 {
 	m_bodies.push_back(body);
+
+	// add extents
+	int bodyInd = m_bodies.size()-1;
+	m_xExtents.push_back(Extent(body, bodyInd, 0, true));
+	m_xExtents.push_back(Extent(body, bodyInd, 0, false));
+
+	m_yExtents.push_back(Extent(body, bodyInd, 1, true));
+	m_yExtents.push_back(Extent(body, bodyInd, 1, false));
+
+	m_zExtents.push_back(Extent(body, bodyInd, 2, true));
+	m_zExtents.push_back(Extent(body, bodyInd, 2, false));
 }
 
 int World::GetNumBodies() const
@@ -121,6 +150,23 @@ int World::FindBody(RigidBody* body) const
 void World::RemoveBody(int body)
 {
 	m_bodies.erase(m_bodies.begin()+body);
+
+	// remove extents
+	for (int i = m_xExtents.size()-1; i >= 0; i--) {
+		if (m_xExtents[i].get_bodyInd() == body) {
+			m_xExtents.erase(m_xExtents.begin() + i);
+		}
+	}
+	for (int i = m_yExtents.size()-1; i >= 0; i--) {
+		if (m_yExtents[i].get_bodyInd() == body) {
+			m_yExtents.erase(m_yExtents.begin() + i);
+		}
+	}
+	for (int i = m_zExtents.size()-1; i >= 0; i--) {
+		if (m_zExtents[i].get_bodyInd() == body) {
+			m_zExtents.erase(m_zExtents.begin() + i);
+		}
+	}
 }
 
 void World::Render() const
@@ -201,12 +247,12 @@ void World::AdvanceVelocities(float dT)
 			// The only forces we have are from gravity and collisions
 			// TODO: update velocity based on collisions
 			body->SetVelocity(body->GetVelocity() + dT*g);
-				
+
 			// L: ANGULAR MOMEMTUM
 			// change in angular momentum is the torque acting on the object
 			//	Torques on the object will be a result of collisions
 			// TODO: update angular velocity based on collision
-			body->ApplyQueuedImpulses();
+			//body->ApplyQueuedImpulses();
 		}
 	}
 }
@@ -356,25 +402,24 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	Matrix3 Kb = CalcK(b, locB-b.GetPosition());
 	// TODO: I think KT is just the sum of the K's
 	Matrix3 KT = Ka + Kb;
-	// TODO: mu is the coefficient of friction?
-	//	setting it to zero for now to test frictionless intersections
-	//float mu = 0;
+	// mu is the coefficient of friction?
 	float mu = std::max(a.GetMaterial()->friction, b.GetMaterial()->friction);
 
 	// try with sticking collision (zero tangential motion after collision)
 	//  i.e. uprime_relt = 0
 	//		then uprime_rel = -epsilon * ureln * N
 	Vector3 uprimerel1 = -epsilon * ureln * N;
+
 	// impulse j is calculated as u'rel = urel + KT*j
 	//	(Paragraph 7, section 1)
 	Vector3 j = KT.Inverse() * (uprimerel1 - urel);
 	float jdotN = j.dotProduct(N);
-	if((j-jdotN*N).squaredLength() < mu*mu*jdotN*jdotN)	{
+	if((j-jdotN*N).squaredLength() <= mu*mu*jdotN*jdotN)	{
 		// sticking collision; j is acceptable
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
-		j = jn * N - mu * jn * T;
+		j = jn * N - mu * jn * T;		
 	}
 
 	/*
@@ -439,11 +484,92 @@ void World::FindIntersections(std::vector<Intersection> & intersections)
 
 	// LOOK this method is slow and not acceptable for a final project, but it works
 	// (slowly) and may help you test other parts
-	for(int i=0; i<GetNumBodies(); i++)
-	{
-		for(int j=i+1; j<GetNumBodies(); j++)
+
+	if (GetNumBodies() < 100) {
+		for(int i=0; i<GetNumBodies(); i++)
 		{
-			FindIntersection(GetBody(i), GetBody(j), intersections);
+			for(int j=i+1; j<GetNumBodies(); j++)
+			{
+				FindIntersection(GetBody(i), GetBody(j), intersections);
+			}
+		}
+	} else {
+		SweepAndPrune(intersections);
+	}	
+}
+
+void World::SweepAndPrune(std::vector<Intersection> & intersections) {
+	// sweep and prune
+
+	// sort the extent arrays
+	// TODO: use bubble/insertion? not sure what this uses
+	//printf("extent array: %d\n", m_xExtents.size());
+	std::sort(m_xExtents.begin(), m_xExtents.end());
+	std::sort(m_yExtents.begin(), m_yExtents.end());
+	std::sort(m_zExtents.begin(), m_zExtents.end());
+	//PrintExtentVector("x", m_xExtents);
+	//PrintExtentVector("y", m_yExtents);
+	//PrintExtentVector("z", m_zExtents);
+
+
+	// create intersection array
+	//Eigen::MatrixXi possibleIntersect(GetNumBodies(), GetNumBodies());
+	//Eigen::TriangularView<Eigen::MatrixXi, Eigen::Lower> utri = possibleIntersect.triangularView<Eigen::Lower>();
+	//utri.fill(0);
+	Eigen::MatrixXi possibleIntersect = Eigen::MatrixXi::Zero(GetNumBodies(), GetNumBodies());
+
+	// update possible collision matrix from extent overlaps
+	TestExtentIntersection(m_xExtents, possibleIntersect);
+	TestExtentIntersection(m_yExtents, possibleIntersect);
+	TestExtentIntersection(m_zExtents, possibleIntersect);
+
+	//std::cout << possibleIntersect << std::endl;
+
+	// any pair with all axis as possible intersections need to be collision checked
+	//	i.e. their matrix value is 3
+	for (int i = 0; i < GetNumBodies(); i++) {
+		for (int j = i+1; j < GetNumBodies(); j++) {
+			if (possibleIntersect(i,j) == 3) {
+				FindIntersection(GetBody(i), GetBody(j), intersections);
+			}
 		}
 	}
+}
+
+void World::TestExtentIntersection(std::vector<Extent> extents, Eigen::MatrixXi &pintersect) {
+	// increment the value for each possible intersection along each axis
+	std::vector<int> exStack;
+	for (int i = 0; i < extents.size(); i++) {
+		Extent extent = extents[i];
+		int bodyInd = extent.get_bodyInd();
+
+		if (extent.is_beginning()) {
+			// push onto stack
+			exStack.push_back(bodyInd);
+		} else {
+			// there is a possible collision with any objects that are on the stack
+			int begInd = 0;
+			for (int j = 0; j < exStack.size(); j++) {
+				if (exStack[j] == bodyInd) {
+					begInd = j;
+				} else {
+					pintersect(bodyInd,exStack[j]) += 1;
+					pintersect(exStack[j],bodyInd) += 1;
+				}
+			}
+			// pop the beginning from the stack
+			exStack.erase(exStack.begin() + begInd);
+		}
+	}
+}
+
+void World::PrintExtentVector(const char *label, std::vector<Extent> extents) {
+	printf("%s:: ", label);
+	for (int i = 0; i < extents.size(); i++) {
+		Extent extent = extents[i];
+		printf("%s:%d:%5.2f  ", extent.is_beginning() ? "b" : "e", 
+								extent.get_bodyInd(),
+								extent.get_extent());		
+	}
+	printf("\n");
 }

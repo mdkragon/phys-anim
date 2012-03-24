@@ -28,7 +28,7 @@ Vector3 Ground::GetMinExtents() const
 
 Vector3 Ground::GetMaxExtents() const
 {
-	return Vector3(-inf, 0, -inf);
+	return Vector3(inf, 0, inf);
 }
 
 Vector3 Ground::GetNormalLocalInertialTensor() const

@@ -5,6 +5,8 @@
 #include <string>
 #include <TestHarness.h>
 #include "Intersection.h"
+#include "Extent.h"
+#include <Eigen\Dense>
 
 class RigidBody;
 struct Material;
@@ -59,6 +61,9 @@ private:
 	void RestoreState();
 
 	void FindIntersections(std::vector<Intersection> & intersections);
+	void SweepAndPrune(std::vector<Intersection> & intersections);
+	void World::TestExtentIntersection(std::vector<Extent> extents, Eigen::MatrixXi &pintersect);
+	void World::PrintExtentVector(const char *label, std::vector<Extent> extents);
 
 	ALLOW_TEST_ACCESS(AdvancePositions, World);
 	ALLOW_TEST_ACCESS(AdvanceVelocities, World);
@@ -68,6 +73,9 @@ private:
 
 	std::vector<Material*> m_materials;
 	std::vector<RigidBody*> m_bodies;
+	std::vector<Extent> m_xExtents;
+	std::vector<Extent> m_yExtents;
+	std::vector<Extent> m_zExtents;
 
 	friend void RunBenchmark(std::string const& name, int frames);
 };

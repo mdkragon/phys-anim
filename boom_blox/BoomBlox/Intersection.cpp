@@ -502,6 +502,11 @@ namespace
 					
 			// out vector is always the normal to the plane
 			Vector3 v = Vector3(0.0, 1.0, 0.0);
+			//Vector3 v = bp - p;
+			//v.normalise();
+			//std::cout << "v: " << v << std::endl;
+			//std::cout << "n: " << ncorner << "\tp: " << p << std::endl;
+
 			
 			intersections.push_back(Intersection(box, ground, p, v));
 		}		
