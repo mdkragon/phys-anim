@@ -6,6 +6,7 @@
 
 Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
+	m_radius = halfSize.length();
 }
 
 Box* Box::Clone() const
@@ -16,15 +17,18 @@ Box* Box::Clone() const
 Vector3 Box::GetMinExtents() const
 {
 	// not implemented // LOOK if you need this, you'll need to write it yourself
-	assert(false);
-	return Vector3::ZERO;
+	//assert(false);
+	//return Vector3::ZERO;
+	
+	return GetPosition() + Vector3(-m_radius, -m_radius, -m_radius);
 }
 
 Vector3 Box::GetMaxExtents() const
 {
 	// not implemented // LOOK if you need this, you'll need to write it yourself
-	assert(false);
-	return Vector3::ZERO;
+	//assert(false);
+	//return Vector3::ZERO;
+	return GetPosition() + Vector3(m_radius, m_radius, m_radius);
 }
 
 TEST(GetNormalLocalInertialTensor, Box)
@@ -35,6 +39,7 @@ TEST(GetNormalLocalInertialTensor, Box)
 	Vector3 tensor = b.GetNormalLocalInertialTensor();
 	CHECK(tensor.positionEquals(Vector3(624, 240, 480)));
 }
+
 Vector3 Box::GetNormalLocalInertialTensor() const
 {
 	// TODO: is this correct? I am not sure what the 'Normal' Inertial Tensor is
@@ -151,3 +156,5 @@ Ogre::Vector3 Box::GetClosestPoint(Vector3 const& p) const
 
 	return GetTransformation()*oc;
 }
+
+

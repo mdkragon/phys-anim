@@ -36,6 +36,7 @@ public:
 
 private:
 	Vector3 m_halfSize;
+	float m_radius;
 };
 
 #endif
