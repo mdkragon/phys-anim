@@ -35,14 +35,13 @@ int main(int argc, char** argv)
 	// LOOK if you wanted, you could load a level right here for testing
 	//LoadWorldIntoGame("../Worlds/incoming.xml");
 	//LoadWorldIntoGame("../Worlds/seesaw.xml");
-	LoadWorldIntoGame("../Worlds/click.xml");
-	//LoadWorldIntoGame("../Worlds/smallstack.xml");
-	//LoadWorldIntoGame("../Worlds/seesaw.xml");
-	//LoadWorldIntoGame("../Worlds/click.xml");
-	//LoadWorldIntoGame("../Worlds/dominoes.xml");
+	//LoadWorldIntoGame("../Worlds/test_many.xml");
 
 	//RunGame();
-	RunBenchmark("../Worlds/dominoes.xml", 100);
+	g_world.SetUseSweepAndPrune(false);
+	RunBenchmark("../Worlds/test_many.xml", 10000);
+	g_world.SetUseSweepAndPrune(true);
+	RunBenchmark("../Worlds/test_many.xml", 10000);
 }
 
 void display();

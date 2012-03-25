@@ -47,6 +47,8 @@ public:
 	// Single simulation step.
 	void Simulate(float dT);
 
+	void SetUseSweepAndPrune(bool useSweepAndPrune);
+
 private:
 	void FillFrom(World const& other);
 
@@ -59,6 +61,7 @@ private:
 
 	void SaveState();
 	void RestoreState();
+
 
 	void FindIntersections(std::vector<Intersection> & intersections);
 	void SweepAndPrune(std::vector<Intersection> & intersections);
@@ -76,6 +79,7 @@ private:
 	std::vector<Extent> m_xExtents;
 	std::vector<Extent> m_yExtents;
 	std::vector<Extent> m_zExtents;
+	bool m_useSweepAndPrune;
 
 	friend void RunBenchmark(std::string const& name, int frames);
 };

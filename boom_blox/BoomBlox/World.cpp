@@ -12,7 +12,7 @@
 
 World::World()
 {
-
+	m_useSweepAndPrune = true;
 }
 
 World::~World()
@@ -485,7 +485,9 @@ void World::FindIntersections(std::vector<Intersection> & intersections)
 	// LOOK this method is slow and not acceptable for a final project, but it works
 	// (slowly) and may help you test other parts
 
-	if (GetNumBodies() < 100) {
+	if (m_useSweepAndPrune) {
+		SweepAndPrune(intersections);
+	} else {
 		for(int i=0; i<GetNumBodies(); i++)
 		{
 			for(int j=i+1; j<GetNumBodies(); j++)
@@ -493,8 +495,6 @@ void World::FindIntersections(std::vector<Intersection> & intersections)
 				FindIntersection(GetBody(i), GetBody(j), intersections);
 			}
 		}
-	} else {
-		SweepAndPrune(intersections);
 	}	
 }
 
@@ -572,4 +572,8 @@ void World::PrintExtentVector(const char *label, std::vector<Extent> extents) {
 								extent.get_extent());		
 	}
 	printf("\n");
+}
+
+void World::SetUseSweepAndPrune(bool useSweepAndPrune) {
+	m_useSweepAndPrune = useSweepAndPrune;
 }
