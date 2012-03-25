@@ -2,9 +2,24 @@ Jordan Brindza
 HW3 - BoomBlox
 CIS 563
 
+
+I implemented the Sweep and Prune algorithm for the broad phase collision detection.
+Unfortunately, the choices I made in the implementation turned out not to be the greatest 
+and the speedup I get from the sweep and prune is not very large. In an environment with
+1,600 objects over a period of 100 frames the Sweep and Prune approach took 306,666 ticks 
+while the naive approach too 314,095 ticks, a 3% increase in speed.
+
+
 1. In class, we talked about problems with contact processing stacks of objects.
 Naively, you would have to do many iteractions to resolve contact problems with
 stacks. How does shock propagation help solve this problem? 
+
+	Shock propagation helps by forcing the contact model to converge and reducing 
+	total number of iterations required to process it. The shock propagation iterates
+	through contact graph starting with the lower levels, after each level is processed 
+	the objects in that level are set to have an infinite mass and become unmovable by
+	higher level objects. This way higher level objects cannot cause lower level objects to 
+	go back into collision.
 
 2. Explain the trade-offs encountered between a bounding sphere and using the
 convex hull? 
@@ -23,9 +38,17 @@ and prune), talked about in class? We have assumed in class we will just naively
 use the three coordinate axes as the sweep direction. But in general this gives
 a poor result.
 
+	You could use a change of basis to transform the object coordinates into a new
+	basis that better represents the data. The new basis can be found using 
+	Princible Component	Anaylsis. Using this basis will result in less false positives
+	requiring a narrow phase collision check.
+
+	The downside of this is that the PCA computation does take a long time so you 
+	would not want to compute a new basis every instance of the simulation.
+
 4. How would you combine particles and rigid bodies to simulate granular
 particles such as sand or dust? Granular particles exhibit both rigid body and
 particle properties so a naive SPH implmenetation would not look realistic out
 of the box.
 
-
+	
