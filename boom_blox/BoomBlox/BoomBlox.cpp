@@ -37,11 +37,15 @@ int main(int argc, char** argv)
 	//LoadWorldIntoGame("../Worlds/seesaw.xml");
 	//LoadWorldIntoGame("../Worlds/test_many.xml");
 
-	//RunGame();
-	g_world.SetUseSweepAndPrune(false);
-	RunBenchmark("../Worlds/test_many.xml", 10000);
 	g_world.SetUseSweepAndPrune(true);
-	RunBenchmark("../Worlds/test_many.xml", 10000);
+	RunGame();
+	
+	/*
+	g_world.SetUseSweepAndPrune(true);
+	RunBenchmark("../Worlds/test_40x40.xml", 100);
+	g_world.SetUseSweepAndPrune(false);
+	RunBenchmark("../Worlds/test_40x40.xml", 100);
+	*/
 }
 
 void display();

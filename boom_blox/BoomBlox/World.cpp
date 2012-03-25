@@ -513,17 +513,17 @@ void World::SweepAndPrune(std::vector<Intersection> & intersections) {
 
 
 	// create intersection array
-	//Eigen::MatrixXi possibleIntersect(GetNumBodies(), GetNumBodies());
-	//Eigen::TriangularView<Eigen::MatrixXi, Eigen::Lower> utri = possibleIntersect.triangularView<Eigen::Lower>();
-	//utri.fill(0);
-	Eigen::MatrixXi possibleIntersect = Eigen::MatrixXi::Zero(GetNumBodies(), GetNumBodies());
-
+	static Eigen::MatrixXi possibleIntersect = Eigen::MatrixXi::Zero(GetNumBodies(), GetNumBodies());
+	if (possibleIntersect.cols() != GetNumBodies()) {
+		possibleIntersect = Eigen::MatrixXi::Zero(GetNumBodies(), GetNumBodies());
+	} else {
+		possibleIntersect.setZero();
+	}
+	
 	// update possible collision matrix from extent overlaps
 	TestExtentIntersection(m_xExtents, possibleIntersect);
 	TestExtentIntersection(m_yExtents, possibleIntersect);
 	TestExtentIntersection(m_zExtents, possibleIntersect);
-
-	//std::cout << possibleIntersect << std::endl;
 
 	// any pair with all axis as possible intersections need to be collision checked
 	//	i.e. their matrix value is 3

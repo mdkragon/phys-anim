@@ -80,6 +80,7 @@ private:
 	std::vector<Extent> m_yExtents;
 	std::vector<Extent> m_zExtents;
 	bool m_useSweepAndPrune;
+	
 
 	friend void RunBenchmark(std::string const& name, int frames);
 };
