@@ -9,6 +9,11 @@
 #include <algorithm>
 #include <queue>
 #include <map>
+#include "SoundManager.h"
+#undef min
+#undef max
+
+SoundManager soundManager;
 
 World::World()
 {
@@ -416,10 +421,16 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	float jdotN = j.dotProduct(N);
 	if((j-jdotN*N).squaredLength() <= mu*mu*jdotN*jdotN)	{
 		// sticking collision; j is acceptable
+	
+		// play sound
+		soundManager.PlayTestSound();
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
-		j = jn * N - mu * jn * T;		
+		j = jn * N - mu * jn * T;	
+
+		// play sound
+		soundManager.PlayTestSound();
 	}
 
 	/*
