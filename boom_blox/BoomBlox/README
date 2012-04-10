@@ -50,5 +50,4 @@ a poor result.
 particles such as sand or dust? Granular particles exhibit both rigid body and
 particle properties so a naive SPH implmenetation would not look realistic out
 of the box.
-
 	
