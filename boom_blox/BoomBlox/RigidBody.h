@@ -2,6 +2,8 @@
 #define RIGIDBODY_H
 
 #include <OgreMath.h>
+#include "Vertex.h"
+#include <vector>
 
 struct Material;
 
@@ -106,6 +108,7 @@ public:
 protected:
 	// perform geometry rendering (but not color setup or transformation)
 	virtual void DoRender() const = 0;
+	vector<Vertex *> verticies;
 
 private:
 	Matrix4 m_transformation;

@@ -21,6 +21,8 @@ public:
 private:
 	float m_radius;
 	float m_density;
+
+	void meshify(int divide); 
 };
 
 #endif
