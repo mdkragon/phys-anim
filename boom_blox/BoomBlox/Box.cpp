@@ -7,6 +7,7 @@
 Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
 	m_radius = halfSize.length();
+	meshify(20);
 }
 
 Box* Box::Clone() const
@@ -158,3 +159,61 @@ Ogre::Vector3 Box::GetClosestPoint(Vector3 const& p) const
 }
 
 
+void Box::meshify(int divide) {
+	// positive z is into the page
+
+	Vector3 bound = GetHalfSize();
+	float x_base = -1 * bound[0];
+	float y_base = -1 * bound[1];
+	float z_base = -1 * bound[2];
+
+	Vertex * P111 = new Vertex(Vector3(x_base, bound[1], z_base));
+	Vertex * P211 = new Vertex(Vector3(x_base, y_base, z_base));
+	Vertex * P121 = new Vertex(Vector3(bound[0], bound[1], z_base));
+	Vertex * P221 = new Vertex(Vector3(bound[0], y_base, z_base));
+	Vertex * P112 = new Vertex(Vector3(x_base, bound[1], bound[2]));
+	Vertex * P122 = new Vertex(Vector3(bound[0], bound[1], bound[2]));
+	Vertex * P212 = new Vertex(Vector3(x_base, y_base, bound[2]));
+	Vertex * P222 = new Vertex(Vector3(bound[0], y_base, bound[2]));
+
+	P111->addNeighbor(P112);
+	P111->addNeighbor(P211);
+	P111->addNeighbor(P121);
+
+	P211->addNeighbor(P111);
+	P211->addNeighbor(P212);
+	P211->addNeighbor(P221);
+
+	P121->addNeighbor(P111);
+	P121->addNeighbor(P221);
+	P121->addNeighbor(P122);
+
+	P221->addNeighbor(P211);
+	P221->addNeighbor(P222);
+	P221->addNeighbor(P121);
+
+	P112->addNeighbor(P122);
+	P112->addNeighbor(P212);
+	P112->addNeighbor(P111);
+
+	P122->addNeighbor(P112);
+	P122->addNeighbor(P222);
+	P122->addNeighbor(P121);
+
+	P222->addNeighbor(P122);
+	P222->addNeighbor(P221);
+	P222->addNeighbor(P212);
+
+	P212->addNeighbor(P222);
+	P212->addNeighbor(P112);
+	P212->addNeighbor(P211);
+
+	verticies.push_back(P111);
+	verticies.push_back(P121);
+	verticies.push_back(P221);
+	verticies.push_back(P211);
+	verticies.push_back(P112);
+	verticies.push_back(P122);
+	verticies.push_back(P222);
+	verticies.push_back(P212);
+}
