@@ -37,6 +37,8 @@ public:
 private:
 	Vector3 m_halfSize;
 	float m_radius;
+
+	void meshify(int divide); 
 };
 
 #endif
