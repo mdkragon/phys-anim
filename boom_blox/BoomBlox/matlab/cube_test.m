@@ -2,7 +2,7 @@
 %
 
 % sample duration
-duration = 2;
+duration = 0.5;
 
 % sampling frequency
 fq = 44100;
@@ -53,7 +53,7 @@ edges = [ 2 3 5;  ...
 
 % number of vertices
 %n = size(vert,1);
-n = 4;
+n = 3;
 
 % K matrix (elastic force matrix)
 %   TODO: this is only the 1D case (should be 3nx3n)
@@ -66,31 +66,38 @@ n = 4;
 %      0 0 0 0 0 0 0 1 ; ...
 %      0 0 0 0 0 0 0 0 ];
 %K = K + K';
+%K = [ K, zeros(n), zeros(n); ...
+%      zeros(n), K, zeros(n); ...
+%      zeros(n), zeros(n), K];
 %K = k*K;
 
 % test tetrahedral
-K = [ 0 1 1 1; ...
-      1 0 1 1; ...
-      1 1 0 1; ...
-      1 1 1 0];
-K = K + eye(n);
+%K = [ 0 1 1 1; ...
+%      1 0 1 1; ...
+%      1 1 0 1; ...
+%      1 1 1 0];
+%K = K + eye(n);
 %K = k*K;
 
 
 % test one triangle mesh
-%K = [ 0 1 1; ...
-%      1 0 1; ...
-%      1 1 0];
-%K = K + K';
-%K = k*K;
+K = [ 0 1 1; ...
+      1 0 1; ...
+      1 1 0];
+K = [ K, zeros(n), zeros(n); ...
+      zeros(n), K, zeros(n); ...
+      zeros(n), zeros(n), K];
+K = k*K;
 
 % diagonalize K
 [G D] = eig(K);
 lambda = diag(D);
 Ginv = inv(G);
+% force positive eigen values
+lambda = abs(lambda);
 
 % mass matrix
-M = mass .* eye(n);
+M = mass .* eye(3*n);
 m = diag(M);
 
 % construct w vector
@@ -101,11 +108,11 @@ w_plus = (t1 + t2)./2.0;
 w_minus = (t1 - t2)./2.0;
 
 % intialize constant terms to 0;
-c = zeros(n,1);
+c = zeros(3*n,1);
 
 % force/impulse vector
 %   This is given from collisions
-f = zeros(n,1);
+f = zeros(3*n,1);
 f(1) = 1;
 
 % compute transformed impulse
@@ -134,18 +141,18 @@ t = 0;
 a = mode_vel(0);
 
 
-
 nmode = length(lambda);
 nsample = fq*duration;
 mode_resp = zeros([nmode, nsample]);
 for ind = 1:fq*duration
   % actual time
-  t = dt*ind;
+  %t = dt*ind
+  t = pi/1000*ind;
   % compute amplitude
   v = mode_vel(t);
   % compute sample for each mode
   %mode_resp(:,ind) = v .* (c .* exp(w_plus*t) + c_bar .* exp(w_minus * t));
-  mode_resp(:,ind) = v .* (c .* exp(w_plus*t) + c_bar .* exp(w_minus * t));
+  mode_resp(:,ind) = v .* (c .* exp(w_plus .* t) + c_bar .* exp(w_minus .* t));
 end
 
 % aggregate mode responses
@@ -160,3 +167,17 @@ m1 = m(1);
 wp1 = w_plus(1);
 wm1 = w_minus(1);
 v1 = c1 * wp1 * exp(wp1 * t) + c1_bar * wm1 * exp(wm1 * t);
+
+
+nmodes = size(mode_resp,1);
+c = jet(nmodes);
+figure;
+set(gcf, 'Color', 'w');
+modenames = {};
+for ind = 1:nmodes
+  modenames{ind} = sprintf('mode %d', ind);
+  plot(mode_resp(ind,:), 'Color', c(ind,:));
+  hold on;
+end
+legend(modenames);
+
