@@ -17,6 +17,7 @@ public:
 	virtual void DoRender() const;
 
 	float GetRadius() const;
+	Eigen::MatrixXf getK();
 
 private:
 	float m_radius;

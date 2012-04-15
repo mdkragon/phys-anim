@@ -158,23 +158,28 @@ Ogre::Vector3 Box::GetClosestPoint(Vector3 const& p) const
 	return GetTransformation()*oc;
 }
 
+Eigen::MatrixXf Box::getK(){
+	Eigen::MatrixXf K = Eigen::MatrixXf(2, 2);
+	return K;
+}
 
 void Box::meshify(int divide) {
 	// positive z is into the page
+	int id = 0;
 
 	Vector3 bound = GetHalfSize();
 	float x_base = -1 * bound[0];
 	float y_base = -1 * bound[1];
 	float z_base = -1 * bound[2];
 
-	Vertex * P111 = new Vertex(Vector3(x_base, bound[1], z_base));
-	Vertex * P211 = new Vertex(Vector3(x_base, y_base, z_base));
-	Vertex * P121 = new Vertex(Vector3(bound[0], bound[1], z_base));
-	Vertex * P221 = new Vertex(Vector3(bound[0], y_base, z_base));
-	Vertex * P112 = new Vertex(Vector3(x_base, bound[1], bound[2]));
-	Vertex * P122 = new Vertex(Vector3(bound[0], bound[1], bound[2]));
-	Vertex * P212 = new Vertex(Vector3(x_base, y_base, bound[2]));
-	Vertex * P222 = new Vertex(Vector3(bound[0], y_base, bound[2]));
+	Vertex * P111 = new Vertex(Vector3(x_base, bound[1], z_base), id); id = id + 1;
+	Vertex * P211 = new Vertex(Vector3(x_base, y_base, z_base), id); id = id + 1;
+	Vertex * P121 = new Vertex(Vector3(bound[0], bound[1], z_base), id); id = id + 1;
+	Vertex * P221 = new Vertex(Vector3(bound[0], y_base, z_base), id); id = id+1;
+	Vertex * P112 = new Vertex(Vector3(x_base, bound[1], bound[2]), id); id = id+1;
+	Vertex * P122 = new Vertex(Vector3(bound[0], bound[1], bound[2]), id); id = id + 1;
+	Vertex * P212 = new Vertex(Vector3(x_base, y_base, bound[2]), id); id = id + 1;
+	Vertex * P222 = new Vertex(Vector3(bound[0], y_base, bound[2]), id); id = id+1;
 
 	P111->addNeighbor(P112);
 	P111->addNeighbor(P211);

@@ -2,6 +2,7 @@
 #include "Material.h"
 #include <gl/glut.h>
 
+
 Sphere::Sphere(float radius) : m_radius(radius)
 {
 	meshify(2); // can't take arguement less than 2
@@ -48,8 +49,17 @@ float Sphere::GetRadius() const
 	return m_radius;
 }
 
+
+// gets k matrix
+Eigen::MatrixXf Sphere::getK(){
+	Eigen::MatrixXf K = Eigen::MatrixXf(2, 2);
+	return K;
+}
+
 // makes a mesh
 void Sphere::meshify(int divide){
+	int id = 0;
+
 	int circle_resolution = divide;
 	int radius = this->m_radius;
 
@@ -66,10 +76,10 @@ void Sphere::meshify(int divide){
 
 		if (i == 0) {
 			// push back the base as the end cap
-			verticies.push_back(new Vertex(base));
+			verticies.push_back(new Vertex(base, id)); id = id+1;
 		} else if (i == circle_resolution) {
 			// push back the end cap
-			Vertex * last_vertex = new Vertex(base_rotation);
+			Vertex * last_vertex = new Vertex(base_rotation, id); id = id+1;
 			verticies.push_back(last_vertex);
 			// add neighbors
 			for (int j = 1 ; j <= circle_resolution; j ++) {
@@ -84,7 +94,7 @@ void Sphere::meshify(int divide){
 				Matrix3 rotation_y = Matrix3 ( cos(rot_y), 0, sin(rot_y), 
 												0, 1, 0,
 												-1 * sin(rot_y), 0, cos(rot_y));
-				Vertex * current_vertex = new Vertex(rotation_y * base_rotation);
+				Vertex * current_vertex = new Vertex(rotation_y * base_rotation, id); id = id+1;
 				verticies.push_back(current_vertex);
 
 				// adding above neighbors
