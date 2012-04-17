@@ -33,12 +33,22 @@ n_eta = .1;
 % vertices
 vert = [ -1 -1  1;  ... p111
          -1 -1 -1;  ... p211
-          1 -1  1;  ... p121
           1 -1 -1;  ... p221
+          1 -1  1;  ... p121
+          -1 -1  1;  ... p111
          -1  1  1;  ... p112
          -1  1 -1;  ... p212
+          1  1 -1; ... p222
           1  1  1;  ... p122
-          1  1 -1]; ... p222
+         -1  1  1];  ... p112
+vert2 = [ 1  1 -1; ... p222
+          1 -1 -1;  ... p221
+          1 -1 1; ...
+          1  1 1; ...
+          1  1 -1; ...
+          -1  1 -1; ...
+          -1  -1 -1]; ...
+
  
 % edges
 %{
@@ -53,23 +63,24 @@ edges = [ 2 3 5;  ...
 
 % number of vertices
 %n = size(vert,1);
-n = 3;
+n = 8;
+%n = 3;
 
 % K matrix (elastic force matrix)
 %   TODO: this is only the 1D case (should be 3nx3n)
-%K = [ 0 1 1 0 1 0 0 0 ; ...
-%      0 0 0 1 0 1 0 0 ; ...
-%      0 0 0 1 0 0 1 0 ; ...
-%      0 0 0 0 0 0 0 1 ; ...
-%      0 0 0 0 0 1 1 0 ; ...
-%      0 0 0 0 0 0 0 1 ; ...
-%      0 0 0 0 0 0 0 1 ; ...
-%      0 0 0 0 0 0 0 0 ];
-%K = K + K';
-%K = [ K, zeros(n), zeros(n); ...
-%      zeros(n), K, zeros(n); ...
-%      zeros(n), zeros(n), K];
-%K = k*K;
+K = [ 0 1 1 0 1 0 0 0 ; ...
+      0 0 0 1 0 1 0 0 ; ...
+      0 0 0 1 0 0 1 0 ; ...
+      0 0 0 0 0 0 0 1 ; ...
+      0 0 0 0 0 1 1 0 ; ...
+      0 0 0 0 0 0 0 1 ; ...
+      0 0 0 0 0 0 0 1 ; ...
+      0 0 0 0 0 0 0 0 ];
+K = K + K';
+K = [ K, zeros(n), zeros(n); ...
+      zeros(n), K, zeros(n); ...
+      zeros(n), zeros(n), K];
+K = k*K*K';
 
 % test tetrahedral
 %K = [ 0 1 1 1; ...
@@ -81,13 +92,13 @@ n = 3;
 
 
 % test one triangle mesh
-K = [ 0 1 1; ...
-      1 0 1; ...
-      1 1 0];
-K = [ K, zeros(n), zeros(n); ...
-      zeros(n), K, zeros(n); ...
-      zeros(n), zeros(n), K];
-K = k*K;
+%K = [ 0 1 1; ...
+%      1 0 1; ...
+%      1 1 0];
+%K = [ K, zeros(n), zeros(n); ...
+%      zeros(n), K, zeros(n); ...
+%      zeros(n), zeros(n), K];
+%K = k*K;
 
 % diagonalize K
 [G D] = eig(K);
@@ -147,7 +158,7 @@ mode_resp = zeros([nmode, nsample]);
 for ind = 1:fq*duration
   % actual time
   %t = dt*ind
-  t = pi/1000*ind;
+  t = pi/100*ind;
   % compute amplitude
   v = mode_vel(t);
   % compute sample for each mode
@@ -169,6 +180,7 @@ wm1 = w_minus(1);
 v1 = c1 * wp1 * exp(wp1 * t) + c1_bar * wm1 * exp(wm1 * t);
 
 
+
 nmodes = size(mode_resp,1);
 c = jet(nmodes);
 figure;
@@ -179,5 +191,6 @@ for ind = 1:nmodes
   plot(mode_resp(ind,:), 'Color', c(ind,:));
   hold on;
 end
-legend(modenames);
+
+%legend(modenames);
 
