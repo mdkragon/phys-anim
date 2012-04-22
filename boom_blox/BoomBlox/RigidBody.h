@@ -4,6 +4,8 @@
 #include <OgreMath.h>
 #include "Vertex.h"
 #include <vector>
+#include <Eigen/Core>
+#include <Eigen/Dense>
 
 struct Material;
 

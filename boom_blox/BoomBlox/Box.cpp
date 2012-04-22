@@ -8,6 +8,7 @@ Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
 	m_radius = halfSize.length();
 	meshify(20);
+	//cout << getK() << endl;
 }
 
 Box* Box::Clone() const
@@ -158,10 +159,6 @@ Ogre::Vector3 Box::GetClosestPoint(Vector3 const& p) const
 	return GetTransformation()*oc;
 }
 
-Eigen::MatrixXf Box::getK(){
-	Eigen::MatrixXf K = Eigen::MatrixXf(2, 2);
-	return K;
-}
 
 void Box::meshify(int divide) {
 	// positive z is into the page
@@ -221,4 +218,23 @@ void Box::meshify(int divide) {
 	verticies.push_back(P122);
 	verticies.push_back(P222);
 	verticies.push_back(P212);
+}
+
+
+// gets k matrix
+Eigen::MatrixXd Box::getK(){
+	int dimension = this->verticies.size(); // there are this many verticies
+	Eigen::MatrixXd K = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	for (int i = 0; i < dimension; i ++) {
+		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
+		int a = this->verticies.at(i)->getId(); // a is first index
+		for (int j = 0; j < neighbors.size(); j++) {
+			int b = neighbors.at(j)->getId(); // b is the neighbor's id
+
+			K(a, b) = K(a, b) + 1; 
+			K(a, a) = K(a, a) - 1;
+			K(b, b) = K(b, b) - 1;
+		}
+	}
+	return K;
 }

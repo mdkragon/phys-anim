@@ -33,7 +33,7 @@ public:
 	virtual void DoRender() const;
 
 	Vector3 const& GetHalfSize() const;
-	Eigen::MatrixXf getK();
+	Eigen::MatrixXd getK();
 
 private:
 	Vector3 m_halfSize;

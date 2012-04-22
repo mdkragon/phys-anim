@@ -5,7 +5,8 @@
 
 Sphere::Sphere(float radius) : m_radius(radius)
 {
-	meshify(2); // can't take arguement less than 2
+	meshify(5); // can't take arguement less than 2
+//	cout << getK() << endl;
 }
 
 Sphere* Sphere::Clone() const
@@ -51,8 +52,20 @@ float Sphere::GetRadius() const
 
 
 // gets k matrix
-Eigen::MatrixXf Sphere::getK(){
-	Eigen::MatrixXf K = Eigen::MatrixXf(2, 2);
+Eigen::MatrixXd Sphere::getK(){
+	int dimension = this->verticies.size(); // there are this many verticies
+	Eigen::MatrixXd K = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	for (int i = 0; i < dimension; i ++) {
+		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
+		int a = this->verticies.at(i)->getId(); // a is first index
+		for (int j = 0; j < neighbors.size(); j++) {
+			int b = neighbors.at(j)->getId(); // b is the neighbor's id
+
+			K(a, b) = K(a, b) + 1; 
+			K(a, a) = K(a, a) - 1;
+			K(b, b) = K(b, b) - 1;
+		}
+	}
 	return K;
 }
 

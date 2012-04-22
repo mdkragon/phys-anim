@@ -19,6 +19,7 @@ public:
 
 	int getId();
 	void addNeighbor(Vertex * neighbor);
+	vector<Vertex *> getNeighbor();
 };
 
 #endif
