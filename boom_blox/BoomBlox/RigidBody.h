@@ -110,7 +110,15 @@ public:
 protected:
 	// perform geometry rendering (but not color setup or transformation)
 	virtual void DoRender() const = 0;
+
+	// Sound Generation Variables
 	vector<Vertex *> verticies;
+	Eigen::MatrixXd getK();
+	Eigen::MatrixXd diagonalizeK(Eigen::MatrixXd K_matrix);
+	Eigen::MatrixXd getM();
+	virtual	void meshify(int divide) = 0; 
+
+	//float spring_constant = 2; 
 
 private:
 	Matrix4 m_transformation;

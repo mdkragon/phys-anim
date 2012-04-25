@@ -262,3 +262,76 @@ void RigidBody::Render() const
 	int err = glGetError();
 	err = err;
 }
+
+
+Eigen::MatrixXd RigidBody::getK(){
+	int dimension = this->verticies.size(); // there are this many verticies
+	Eigen::MatrixXd K = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	for (int i = 0; i < dimension; i ++) {
+		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
+		int a = this->verticies.at(i)->getId(); // a is first index
+		for (int j = 0; j < neighbors.size(); j++) {
+			int b = neighbors.at(j)->getId(); // b is the neighbor's id
+
+			// twice diagaonal 
+			// positive K- constant
+			K(a, b) = K(a, b) - 1; 
+			K(a, a) = K(a, a) + 1;
+			K(b, b) = K(b, b) + 1;
+		}
+	}
+
+	
+	// now the K is created for one dimention
+	// so we need to make the K matrix 3N x 3N
+
+	Eigen::MatrixXd K_expand = Eigen::MatrixXd::Zero(3*dimension, 3*dimension); 
+	K_expand << K , Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension),
+		Eigen::MatrixXd::Zero(dimension, dimension), K, Eigen::MatrixXd::Zero(dimension, dimension),
+		Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension), K;
+
+	// now we need to multiply it by the k-constant
+
+	float thickness = 5;
+	float Y = 200; // young's modulus of steel
+	float k_constant = thickness * Y;
+
+	K_expand = k_constant * K_expand;
+
+	return K_expand;
+}
+
+// returns the mass matrix
+Eigen::MatrixXd RigidBody::getM() {
+	int dimension = this->verticies.size(); // there are this many verticies
+	// m = density * thickness * area; 
+	// for now assume homogenous object
+	// density for steel is 7.85 g/cm^3
+
+	float thickness = 5;
+	float mass = 0.785 * 3 * thickness;
+	mass = 0.1; // over write for now
+
+	Eigen::MatrixXd m = mass * Eigen::MatrixXd::Identity(dimension, dimension);
+
+	return m;
+}
+
+Eigen::MatrixXd RigidBody::diagonalizeK(Eigen::MatrixXd K_matrix) {
+	// TODO
+	return Eigen::MatrixXd::Identity(1,1);
+}
+
+/*
+
+% diagonalize K
+[G D] = eig(K);
+lambda = diag(D);
+%lambda = lambda + [1;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0]
+Ginv = inv(G);
+% force positive eigen values // nope C:
+%lambda = abs(lambda);
+
+% mass matrix
+M = mass .* eye(3*n);
+m = diag(M); */

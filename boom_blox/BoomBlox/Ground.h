@@ -20,6 +20,8 @@ public:
 	virtual float GetNormalInverseMass() const;
 	virtual void DoRender() const;
 	virtual bool HasInfiniteMass() const;
+
+	void meshify(int divide); 
 };
 
 #endif

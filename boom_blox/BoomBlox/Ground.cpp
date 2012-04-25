@@ -69,3 +69,8 @@ bool Ground::HasInfiniteMass() const
 	// LOOK Even when not immobilized, mass is infinite.
 	return true;
 }
+
+void Ground::meshify(int divide){
+	// TODO
+	// Ground doesn't get a mesh yet
+}
