@@ -324,7 +324,6 @@ void RigidBody::getM(Eigen::MatrixXd &M) {
 
 void RigidBody::diagonalizeK(const Eigen::MatrixXd &K, Eigen::MatrixXd &G,
 										Eigen::MatrixXd &D, Eigen::MatrixXd &Ginv) {
-	// TODO
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(K);
 	if (eigensolver.info() != Eigen::Success) abort();
 
