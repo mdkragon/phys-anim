@@ -7,8 +7,7 @@
 Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
 	m_radius = halfSize.length();
-	meshify(20);
-//	cout << getK() << endl;
+	initSoundScene();
 }
 
 Box* Box::Clone() const

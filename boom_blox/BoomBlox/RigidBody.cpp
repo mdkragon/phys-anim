@@ -264,9 +264,9 @@ void RigidBody::Render() const
 }
 
 
-Eigen::MatrixXd RigidBody::getK(){
+void RigidBody::getK(Eigen::MatrixXd &K){
 	int dimension = this->verticies.size(); // there are this many verticies
-	Eigen::MatrixXd K = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	Eigen::MatrixXd K_Matrix = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
 	for (int i = 0; i < dimension; i ++) {
 		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
 		int a = this->verticies.at(i)->getId(); // a is first index
@@ -275,9 +275,9 @@ Eigen::MatrixXd RigidBody::getK(){
 
 			// twice diagaonal 
 			// positive K- constant
-			K(a, b) = K(a, b) - 1; 
-			K(a, a) = K(a, a) + 1;
-			K(b, b) = K(b, b) + 1;
+			K_Matrix(a, b) = K_Matrix(a, b) - 1; 
+			K_Matrix(a, a) = K_Matrix(a, a) + 1;
+			K_Matrix(b, b) = K_Matrix(b, b) + 1;
 		}
 	}
 
@@ -286,9 +286,9 @@ Eigen::MatrixXd RigidBody::getK(){
 	// so we need to make the K matrix 3N x 3N
 
 	Eigen::MatrixXd K_expand = Eigen::MatrixXd::Zero(3*dimension, 3*dimension); 
-	K_expand << K , Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension),
-		Eigen::MatrixXd::Zero(dimension, dimension), K, Eigen::MatrixXd::Zero(dimension, dimension),
-		Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension), K;
+	K_expand << K_Matrix , Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension),
+		Eigen::MatrixXd::Zero(dimension, dimension), K_Matrix, Eigen::MatrixXd::Zero(dimension, dimension),
+		Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension), K_Matrix;
 
 	// now we need to multiply it by the k-constant
 
@@ -298,40 +298,79 @@ Eigen::MatrixXd RigidBody::getK(){
 
 	K_expand = k_constant * K_expand;
 
-	return K_expand;
+	K = K_expand;
+
+	return;
 }
 
 // returns the mass matrix
-Eigen::MatrixXd RigidBody::getM() {
+void RigidBody::getM(Eigen::MatrixXd &M) {
 	int dimension = this->verticies.size(); // there are this many verticies
+	dimension = 3 * dimension;
 	// m = density * thickness * area; 
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
 
-	float thickness = 5;
-	float mass = 0.785 * 3 * thickness;
+	double thickness = 5;
+	double mass = 0.785 * 3 * thickness;
 	mass = 0.1; // over write for now
 
-	Eigen::MatrixXd m = mass * Eigen::MatrixXd::Identity(dimension, dimension);
+	Eigen::MatrixXd mass_matrix = mass * Eigen::MatrixXd::Identity(dimension, dimension);
 
-	return m;
+	M = mass_matrix;
+
+	return;
 }
 
-Eigen::MatrixXd RigidBody::diagonalizeK(Eigen::MatrixXd K_matrix) {
+void RigidBody::diagonalizeK(const Eigen::MatrixXd &K, Eigen::MatrixXd &G,
+										Eigen::MatrixXd &D, Eigen::MatrixXd &Ginv) {
 	// TODO
-	return Eigen::MatrixXd::Identity(1,1);
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(K);
+	if (eigensolver.info() != Eigen::Success) abort();
+
+	D = eigensolver.eigenvalues().asDiagonal(); // eigenvalues.  G
+	G = eigensolver.eigenvectors(); // eigen vectors. D
+	Ginv = eigensolver.eigenvectors().inverse(); // Ginv
+
+	return;
 }
 
-/*
+void RigidBody::constructW(Eigen::VectorXcd &W_plus, Eigen::VectorXcd &W_minus){
+	double gama = 0.00001; // fluid damping
+	double n_eta = 0.1; // viscolastic damping
 
-% diagonalize K
-[G D] = eig(K);
-lambda = diag(D);
-%lambda = lambda + [1;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0]
-Ginv = inv(G);
-% force positive eigen values // nope C:
-%lambda = abs(lambda);
+	int dimension = verticies.size();
+	dimension = dimension * 3;
 
-% mass matrix
-M = mass .* eye(3*n);
-m = diag(M); */
+	W_plus = Eigen::VectorXcd::Zero(dimension);
+	W_minus = Eigen::VectorXcd::Zero(dimension);
+
+	// imaginary numbers lol ... 
+	// puts complex cast every where and hope it works
+
+	// w_i = ( -(gama*lambda_i + n) +/- sqrt ((gamma * lambda_i + n)^2 - 4*lambda_i))/2
+	for (int i = 0; i < dimension; i ++) {
+		double lambda_i = D(i,i);
+		complex<double> p1 = -1 * (gama * lambda_i + n_eta);
+		complex<double> p2 = sqrt( complex<double> (pow(gama * lambda_i + dimension, 2) - 4 * lambda_i )); 
+		
+		W_plus(i) = complex<double> ((p1 + p2)/2.0);
+		W_minus(i) = complex<double> ((p1 + p2)/2.0);
+	}
+}
+
+
+void RigidBody::initSoundScene() {
+	// call meshify
+	this->meshify(5);
+	// first calcualte K
+	this->getK(K);
+	//std::cout << K << endl;
+	// then get M
+	this->getM(M);
+	this->diagonalizeK(K, G, D, Ginv);
+	// construct the W
+	constructW(W_plus, W_minus);
+	std::cout << "this is plus "<< W_plus << endl;
+	std::cout << "this is minus " << W_minus << endl;
+}

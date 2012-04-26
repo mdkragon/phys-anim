@@ -5,8 +5,7 @@
 
 Sphere::Sphere(float radius) : m_radius(radius)
 {
-	meshify(5); // can't take arguement less than 2
-//	cout << getK() << endl;
+
 }
 
 Sphere* Sphere::Clone() const
