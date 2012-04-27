@@ -175,3 +175,76 @@ void SoundManager::PlayTestSound()
  //       ERRCHECK(result);
  //   }
 }
+
+void SoundManager::InitUserCreatedSound()
+{
+	// sound info struct
+	FMOD_CREATESOUNDEXINFO  createsoundexinfo;
+	// sound mode
+	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_HARDWARE;
+	// actual sound object
+	//FMOD::Sound *sound;
+	int channels = 2;
+	FMOD_RESULT result;
+
+	// fill the sound info struct
+	memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
+	// required
+    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);
+	// Chunk size of stream update in samples.  This will be the amount of data passed to the user callback.
+	createsoundexinfo.decodebuffersize  = 44100;
+	// Length of PCM data in bytes of whole song (for Sound::getLength)
+    createsoundexinfo.length            = 44100 * channels * sizeof(signed short) * 5;
+	// Number of channels in the sound.
+    createsoundexinfo.numchannels       = channels;
+	// Default playback rate of sound.
+    createsoundexinfo.defaultfrequency  = 44100;
+	// Data format of sound.
+    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;
+	// User callback for reading
+    createsoundexinfo.pcmreadcallback  	= pcmreadcallback;
+	// User callback for seeking.
+    createsoundexinfo.pcmsetposcallback = pcmsetposcallback;
+
+	// create the sound
+	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
+    result = system->createSound(0, mode, &createsoundexinfo, &usersound);
+    ERRCHECK(result);
+}
+
+void SoundManager::PlayUserCreatedSound() {
+	FMOD_RESULT result;
+
+	result = system->playSound(FMOD_CHANNEL_FREE, usersound, false, &channel1);
+	ERRCHECK(result);
+}
+
+FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
+{
+    unsigned int  count;
+    static float  t1 = 0, t2 = 0;        // time
+    static float  v1 = 0, v2 = 0;        // velocity
+    signed short *stereo16bitbuffer = (signed short *)data;
+
+    for (count=0; count<datalen>>2; count++)        // >>2 = 16bit stereo (4 bytes per sample)
+    {
+        *stereo16bitbuffer++ = (signed short)(sin(t1) * 32767.0f);    // left channel
+        *stereo16bitbuffer++ = (signed short)(sin(t2) * 32767.0f);    // right channel
+
+        t1 += 0.01f   + v1;
+        t2 += 0.0142f + v2;
+        v1 += (float)(sin(t1) * 0.002f);
+        v2 += (float)(sin(t2) * 0.002f);
+    }
+
+    return FMOD_OK;
+}
+
+
+FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype)
+{
+    /*
+        This is useful if the user calls Channel::setPosition and you want to seek your data accordingly.
+    */
+    return FMOD_OK;
+}

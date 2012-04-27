@@ -36,11 +36,11 @@ int main(int argc, char** argv)
 	SetupGraphics();
 
 	// LOOK if you wanted, you could load a level right here for testing
-	//LoadWorldIntoGame("../Worlds/incoming.xml");
+	LoadWorldIntoGame("../Worlds/justground.xml");
 	//LoadWorldIntoGame("../Worlds/seesaw.xml");
 	//LoadWorldIntoGame("../Worlds/test_many.xml");
 
-	g_world.SetUseSweepAndPrune(true);
+	g_world.SetUseSweepAndPrune(false);
 	RunGame();
 	
 	/*

@@ -424,6 +424,7 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 	
 		// play sound
 		soundManager.PlayTestSound();
+		//soundManager.PlayUserCreatedSound();
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
@@ -431,6 +432,7 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 
 		// play sound
 		soundManager.PlayTestSound();
+		//soundManager.PlayUserCreatedSound();
 	}
 
 	/*
