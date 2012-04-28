@@ -354,7 +354,7 @@ void RigidBody::constructW(Eigen::VectorXcd &W_plus, Eigen::VectorXcd &W_minus){
 		complex<double> p2 = sqrt( complex<double> (pow(gama * lambda_i + dimension, 2) - 4 * lambda_i )); 
 		
 		W_plus(i) = complex<double> ((p1 + p2)/2.0);
-		W_minus(i) = complex<double> ((p1 + p2)/2.0);
+		W_minus(i) = complex<double> ((p1 - p2)/2.0);
 	}
 }
 
@@ -370,6 +370,71 @@ void RigidBody::initSoundScene() {
 	this->diagonalizeK(K, G, D, Ginv);
 	// construct the W
 	constructW(W_plus, W_minus);
-	std::cout << "this is plus "<< W_plus << endl;
-	std::cout << "this is minus " << W_minus << endl;
+	//std::cout << "this is plus "<< W_plus << endl;
+	//std::cout << "this is minus " << W_minus << endl;
+}
+
+Eigen::VectorXd RigidBody::calculateSound() {
+	// constants w00t
+	double duration = 0.5;
+	double fq = 44100;
+	double dt = 1/ fq;
+
+	int dimension = verticies.size();
+
+
+	// force/impulse (will be later passed from colissions
+	Eigen::VectorXcd f = Eigen::VectorXcd::Zero(3 * dimension);
+	f(1) = 1; // arbiturarily
+
+	// compute transformed impulse
+	Eigen::VectorXcd g = Ginv * f;
+
+	// transform M to vector
+	Eigen::VectorXd m = M.diagonal();
+	double test = m(1);
+
+	// time of impact / colission
+	complex<double> t0 = 0;  // has to be complex to multiply W_plus
+
+	
+	// init constant terms to 0
+	Eigen::VectorXcd c = Eigen::VectorXcd::Zero(3 * dimension); 
+
+	// update constants
+	// c = c + g./((m .* (w_plus - w_minus)) .* exp(w_plus * t0));
+	// how is c a 24 x 3 matrix? 
+	for (int i = 0; i < dimension * 3; i++) {
+		c(i) = c(i) +  g(i) / (( m(i) * (W_plus(i) - W_minus(i))) * exp(W_plus(i) * t0));
+	}
+	Eigen::VectorXcd c_bar = conj(c);
+	//std::cout << "this is constants" << c << endl;
+	
+	// current time
+	complex<double> t = 0; // has to be complex 
+
+	// double nmode = D.diagonal().norm(); // because i'm stupid lol
+	int nmode = dimension * 3;//D.diagonal().size();
+	int nsample = fq * duration;
+	//Eigen::MatrixXcd mode_resp = Eigen::MatrixXcd::Zero(nmode, nsample);
+	Eigen::VectorXd sample = Eigen::VectorXd::Zero(nsample); // sample matrix
+
+	// summing modes
+	for (int i =0; i < nsample; i++) {
+		complex<double> modes = 0; 
+		t = dt * i;
+		for (int j = 0; j < nmode; j++) {
+			// mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
+			complex<double> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
+			//  mode_resp(:,ind) = v .* (c .* exp(w_plus .* t) + c_bar .* exp(w_minus .* t));
+			modes = modes + v * ( c(j) * exp(W_plus(j) *t) + c_bar(j) * exp (W_minus(j) * t));
+		}
+		sample(i) = modes.real(); 
+	}
+
+	//std::cout << "sample 1 " << sample(0) << endl;
+	//std::cout << "sample 2 " << sample(1) << endl;
+	//std::cout << "sample 3 " << sample(2) << endl;
+	//std::cout<<sample<<endl;
+	return sample;
 }

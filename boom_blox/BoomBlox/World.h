@@ -83,6 +83,10 @@ private:
 	
 
 	friend void RunBenchmark(std::string const& name, int frames);
+
+	// sound functions:
+	void calcSound(const RigidBody &a, const RigidBody &b); 
+
 };
 
 #endif

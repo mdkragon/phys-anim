@@ -111,6 +111,21 @@ protected:
 	// perform geometry rendering (but not color setup or transformation)
 	virtual void DoRender() const = 0;
 
+private:
+	Matrix4 m_transformation;
+	Matrix4 m_savedTransformation;
+	Vector3 m_velocity;
+	Vector3 m_angularVelocity;
+	Vector3 m_savedVelocity;
+	Vector3 m_savedAngularVelocity;
+	Vector3 m_queuedDeltaVelocity;
+	Vector3 m_queuedDeltaAngularVelocity;
+
+	Material const* m_material;
+
+	bool m_hasInfiniteMass;
+
+protected:
 	// Sound Generation Variables
 	vector<Vertex *> verticies;
 	Eigen::MatrixXd K; 
@@ -131,21 +146,9 @@ protected:
 
 	void initSoundScene();
 
-	//float spring_constant = 2; 
+public: 
+	Eigen::VectorXd calculateSound();
 
-private:
-	Matrix4 m_transformation;
-	Matrix4 m_savedTransformation;
-	Vector3 m_velocity;
-	Vector3 m_angularVelocity;
-	Vector3 m_savedVelocity;
-	Vector3 m_savedAngularVelocity;
-	Vector3 m_queuedDeltaVelocity;
-	Vector3 m_queuedDeltaAngularVelocity;
-
-	Material const* m_material;
-
-	bool m_hasInfiniteMass;
 };
 
 #endif

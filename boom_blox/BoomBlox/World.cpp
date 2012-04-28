@@ -588,3 +588,10 @@ void World::PrintExtentVector(const char *label, std::vector<Extent> extents) {
 void World::SetUseSweepAndPrune(bool useSweepAndPrune) {
 	m_useSweepAndPrune = useSweepAndPrune;
 }
+
+void World::calcSound(const RigidBody &a, const RigidBody &b) {
+//	int dim_a = a.verticies.size();
+
+	Eigen::VectorXcd c1 = Eigen::VectorXcd::Zero(3);
+	// doesn't do anything right now lol
+}
