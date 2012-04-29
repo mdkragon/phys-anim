@@ -267,6 +267,7 @@ void RigidBody::Render() const
 void RigidBody::getK(Eigen::MatrixXd &K){
 	int dimension = this->verticies.size(); // there are this many verticies
 	Eigen::MatrixXd K_Matrix = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	
 	for (int i = 0; i < dimension; i ++) {
 		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
 		int a = this->verticies.at(i)->getId(); // a is first index
@@ -280,8 +281,8 @@ void RigidBody::getK(Eigen::MatrixXd &K){
 			K_Matrix(b, b) = K_Matrix(b, b) + 1;
 		}
 	}
-
 	
+		
 	// now the K is created for one dimention
 	// so we need to make the K matrix 3N x 3N
 
@@ -292,7 +293,11 @@ void RigidBody::getK(Eigen::MatrixXd &K){
 
 	// now we need to multiply it by the k-constant
 
-	float thickness = 5;
+
+
+
+	//float thickness = 5;
+	float thickness = 0.01;
 	float Y = 200; // young's modulus of steel
 	float k_constant = thickness * Y;
 
@@ -311,9 +316,10 @@ void RigidBody::getM(Eigen::MatrixXd &M) {
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
 
-	double thickness = 5;
+	//double thickness = 5;
+	double thickness = 0.01;
 	double mass = 0.785 * 3 * thickness;
-	mass = 0.1; // over write for now
+	//mass = 0.1; // over write for now
 
 	Eigen::MatrixXd mass_matrix = mass * Eigen::MatrixXd::Identity(dimension, dimension);
 
@@ -327,10 +333,10 @@ void RigidBody::diagonalizeK(const Eigen::MatrixXd &K, Eigen::MatrixXd &G,
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(K);
 	if (eigensolver.info() != Eigen::Success) abort();
 
-	D = eigensolver.eigenvalues().asDiagonal(); // eigenvalues.  G
-	G = eigensolver.eigenvectors(); // eigen vectors. D
+	D = eigensolver.eigenvalues().asDiagonal(); // eigenvalues. D
+	G = eigensolver.eigenvectors(); // eigen vectors. G
 	Ginv = eigensolver.eigenvectors().inverse(); // Ginv
-
+	
 	return;
 }
 
@@ -351,7 +357,7 @@ void RigidBody::constructW(Eigen::VectorXcd &W_plus, Eigen::VectorXcd &W_minus){
 	for (int i = 0; i < dimension; i ++) {
 		double lambda_i = D(i,i);
 		complex<double> p1 = -1 * (gama * lambda_i + n_eta);
-		complex<double> p2 = sqrt( complex<double> (pow(gama * lambda_i + dimension, 2) - 4 * lambda_i )); 
+		complex<double> p2 = sqrt( complex<double> (pow(gama * lambda_i + n_eta, 2) - 4 * lambda_i )); 
 		
 		W_plus(i) = complex<double> ((p1 + p2)/2.0);
 		W_minus(i) = complex<double> ((p1 - p2)/2.0);
@@ -364,14 +370,16 @@ void RigidBody::initSoundScene() {
 	this->meshify(5);
 	// first calcualte K
 	this->getK(K);
-	//std::cout << K << endl;
+	//std::cout << "K:\n" << K << endl;
 	// then get M
 	this->getM(M);
+	//std::cout << "M:\n" << M << endl;
 	this->diagonalizeK(K, G, D, Ginv);
+	//std::cout << "D:\n" << D << endl;
 	// construct the W
 	constructW(W_plus, W_minus);
-	//std::cout << "this is plus "<< W_plus << endl;
-	//std::cout << "this is minus " << W_minus << endl;
+	//std::cout << "this is plus:\n"<< W_plus << endl;
+	//std::cout << "this is minus:\n" << W_minus << endl;
 }
 
 Eigen::VectorXd RigidBody::calculateSound() {
@@ -385,15 +393,15 @@ Eigen::VectorXd RigidBody::calculateSound() {
 
 	// force/impulse (will be later passed from colissions
 	Eigen::VectorXcd f = Eigen::VectorXcd::Zero(3 * dimension);
-	f(1) = 1; // arbiturarily
+	f(0) = 1; // arbiturarily
+	//cout << "f:\n" << f << endl;
 
 	// compute transformed impulse
 	Eigen::VectorXcd g = Ginv * f;
-
+	//cout << "g:\n" << g << endl;
 	// transform M to vector
 	Eigen::VectorXd m = M.diagonal();
-	double test = m(1);
-
+	
 	// time of impact / colission
 	complex<double> t0 = 0;  // has to be complex to multiply W_plus
 
@@ -407,8 +415,9 @@ Eigen::VectorXd RigidBody::calculateSound() {
 	for (int i = 0; i < dimension * 3; i++) {
 		c(i) = c(i) +  g(i) / (( m(i) * (W_plus(i) - W_minus(i))) * exp(W_plus(i) * t0));
 	}
-	Eigen::VectorXcd c_bar = conj(c);
-	//std::cout << "this is constants" << c << endl;
+	Eigen::VectorXcd c_bar = c.conjugate();//conj(c);
+	//std::cout << "c: \n" << c << endl;
+	//std::cout << "c_bar: \n" << c_bar << endl;
 	
 	// current time
 	complex<double> t = 0; // has to be complex 
@@ -422,19 +431,19 @@ Eigen::VectorXd RigidBody::calculateSound() {
 	// summing modes
 	for (int i =0; i < nsample; i++) {
 		complex<double> modes = 0; 
-		t = dt * i;
+		t = dt * (i+1);
 		for (int j = 0; j < nmode; j++) {
 			// mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
 			complex<double> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
 			//  mode_resp(:,ind) = v .* (c .* exp(w_plus .* t) + c_bar .* exp(w_minus .* t));
-			modes = modes + v * ( c(j) * exp(W_plus(j) *t) + c_bar(j) * exp (W_minus(j) * t));
+			modes = modes + v * (c(j) * exp(W_plus(j) *t) + c_bar(j) * exp (W_minus(j) * t));
 		}
 		sample(i) = modes.real(); 
 	}
 
-	//std::cout << "sample 1 " << sample(0) << endl;
-	//std::cout << "sample 2 " << sample(1) << endl;
-	//std::cout << "sample 3 " << sample(2) << endl;
+	//std::cout << "sample 1: " << sample(0) << endl;
+	//std::cout << "sample 2: " << sample(1) << endl;
+	//std::cout << "sample 3: " << sample(2) << endl;
 	//std::cout<<sample<<endl;
 	return sample;
 }
