@@ -591,7 +591,17 @@ void World::SetUseSweepAndPrune(bool useSweepAndPrune) {
 }
 
 void World::calcSound(RigidBody &a, RigidBody &b) {
-	a.calculateSound(Sound_Manager);
+	Ground * g; 
+
+	g = dynamic_cast<Ground *>(&a);
+	if (g == 0) {  // g == 0 then cast not successful
+		a.calculateSound(Sound_Manager);
+	} 
+	g = dynamic_cast<Ground * > (&b);
+	if (g== 0) {
+		b.calculateSound(Sound_Manager);
+	}
+	
 	//b.calculateSound(Sound_Manager);
 	/* sound_manager now saves the FMOD::Sound objects/structs in a vector
 	(it is slow right now)
