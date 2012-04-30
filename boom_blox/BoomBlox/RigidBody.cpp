@@ -464,8 +464,8 @@ Eigen::VectorXf RigidBody::calculateSound(SoundManager soundManager) {
 	}
 
 	myfile.close();
+	exit(2); 
 	*/
-
 	//std::cout << "sample 1: " << sample(0) << endl;
 	//std::cout << "sample 2: " << sample(1) << endl;
 	//std::cout << "sample 3: " << sample(2) << endl;
