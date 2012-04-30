@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 	glutInit(&argc, argv);
 	std::cout.sync_with_stdio();
 
-	RunTests();
+	//RunTests();
 	SetupGraphics();
 
 	// LOOK if you wanted, you could load a level right here for testing

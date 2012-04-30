@@ -591,8 +591,8 @@ void World::SetUseSweepAndPrune(bool useSweepAndPrune) {
 }
 
 void World::calcSound(RigidBody &a, RigidBody &b) {
-//	a.calculateSound();
-//	b.calculateSound();
+	a.calculateSound(Sound_Manager);
+	//b.calculateSound(Sound_Manager);
 	/* sound_manager now saves the FMOD::Sound objects/structs in a vector
 	(it is slow right now)
 	 and when you do play user create sounds, it plays everything in the vector
@@ -638,11 +638,11 @@ void World::calcSound(RigidBody &a, RigidBody &b) {
 
 
 	// creates 3 instances of user-gen sound.
-	Sound_Manager.InitUserCreatedSound();
-	Sound_Manager.InitUserCreatedSound();
-	Sound_Manager.InitUserCreatedSound();
+	//Sound_Manager.InitUserCreatedSound();
+	//Sound_Manager.InitUserCreatedSound();
+	//Sound_Manager.InitUserCreatedSound();
 	// plays all of them
-	Sound_Manager.PlayUserCreatedSound();
+	//Sound_Manager.PlayUserCreatedSound();
 
 	//TODO , figure out when to release sound streams
 	// ie, maybe each object can only have max n sound at a time or something like that

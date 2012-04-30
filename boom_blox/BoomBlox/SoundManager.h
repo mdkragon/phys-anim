@@ -7,6 +7,8 @@
 #include <math.h>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <sstream>
 #include <Eigen\Dense>
 
 //#include "Global.h"
@@ -27,7 +29,12 @@ public:
 
 	void InitCollisionSound();
 
-  //FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype);
+	void InitUserCreatedSample(float *data, int length);
+	
+	void SoundManager::fileLoader();
+
+	
+    float * stream;
 
 private:
 	FMOD::System    *system;

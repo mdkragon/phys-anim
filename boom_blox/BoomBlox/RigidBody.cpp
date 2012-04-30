@@ -385,7 +385,7 @@ void RigidBody::initSoundScene() {
 	//std::cout << "this is minus:\n" << W_minus << endl;
 }
 
-Eigen::VectorXd RigidBody::calculateSound() {
+Eigen::VectorXf RigidBody::calculateSound(SoundManager soundManager) {
 	// constants w00t
 	double duration = 0.5;
 	double fq = 44100;
@@ -429,9 +429,11 @@ Eigen::VectorXd RigidBody::calculateSound() {
 	int nmode = dimension * 3;//D.diagonal().size();
 	int nsample = fq * duration;
 	//Eigen::MatrixXcd mode_resp = Eigen::MatrixXcd::Zero(nmode, nsample);
-	Eigen::VectorXd sample = Eigen::VectorXd::Zero(nsample); // sample matrix
+	//Eigen::VectorXd sample = Eigen::VectorXd::Zero(nsample); // sample matrix
+	Eigen::VectorXf sample = Eigen::VectorXf::Zero(nsample); // sample matrix
 
-	double max = 0;
+	//double max = 0;
+	float max = 0;
 
 	// summing modes
 	for (int i =0; i < nsample; i++) {
@@ -443,7 +445,7 @@ Eigen::VectorXd RigidBody::calculateSound() {
 			//  mode_resp(:,ind) = v .* (c .* exp(w_plus .* t) + c_bar .* exp(w_minus .* t));
 			modes = modes + v * (c(j) * exp(W_plus(j) *t) + c_bar(j) * exp (W_minus(j) * t));
 		}
-		sample(i) = modes.real(); 
+		sample(i) = (float)modes.real(); 
 
 		if (abs(sample(i) > max)) {
 			max =abs(sample(i));
@@ -452,15 +454,17 @@ Eigen::VectorXd RigidBody::calculateSound() {
 
 	sample = sample/max; // normalize it... 
 
+	soundManager.InitUserCreatedSample(&sample(0), sample.size());
+
 	/*
 	ofstream myfile;
-  myfile.open ("matlab/rawr.txt");
-  for (int i = 0 ; i < nsample; i++) {
-	myfile << sample(i) << " "; 
-  }
-  
-  myfile.close();
-  */
+	myfile.open ("matlab/rawr.txt");
+	for (int i = 0 ; i < nsample; i++) {
+		myfile << sample(i) << " "; 
+	}
+
+	myfile.close();
+	*/
 
 	//std::cout << "sample 1: " << sample(0) << endl;
 	//std::cout << "sample 2: " << sample(1) << endl;

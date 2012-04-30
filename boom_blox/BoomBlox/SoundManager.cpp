@@ -102,6 +102,7 @@ SoundManager::SoundManager()
     result = system->createSound("Bounce.wav", FMOD_SOFTWARE | FMOD_2D, 0, &sound3);
     ERRCHECK(result);
 	
+	/*
 	{
         FMOD_VECTOR pos = { -10.0f * DISTANCEFACTOR, 0.0f, 0.0f };
         FMOD_VECTOR vel = {  0.0f, 0.0f, 0.0f };
@@ -113,12 +114,23 @@ SoundManager::SoundManager()
         result = channel1->setPaused(false);
         ERRCHECK(result);
     }
+	*/
 	
 
 	sounds = new std::vector<FMOD::Sound *>;
 	channels = new std::vector<FMOD::Channel *>;
 	
 //	InitUserCreatedSound();
+
+	sounds = new std::vector<FMOD::Sound *>;
+    channels = new std::vector<FMOD::Channel *>;
+
+	int length = 22050;
+    stream = (float*)malloc(sizeof (float) * length);
+
+    fileLoader();
+
+	InitUserCreatedSample(stream, length);
 }
 
 SoundManager::~SoundManager()
@@ -188,7 +200,8 @@ void SoundManager::InitUserCreatedSound()
 	// sound info struct
 	FMOD_CREATESOUNDEXINFO  createsoundexinfo;
 	// sound mode
-	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_HARDWARE;
+	//FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_HARDWARE;
+	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_SOFTWARE;
 	// actual sound object
 	//FMOD::Sound *sound;
 	int num_channels = 2;
@@ -222,6 +235,63 @@ void SoundManager::InitUserCreatedSound()
     ERRCHECK(result);
 	sounds->push_back(tmpsound);
 	channels->push_back(tmpchannel);
+}
+
+void SoundManager::InitUserCreatedSample(float *data, int length)
+{
+	// sound info struct
+	FMOD_CREATESOUNDEXINFO  createsoundexinfo;
+	// sound mode
+	FMOD_MODE mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_SOFTWARE;
+	
+
+	int num_channels = 1;
+	FMOD_RESULT result;
+
+	FMOD::Sound *tmpsound;
+	FMOD::Channel *tmpchannel;
+
+	// fill the sound info struct
+	memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
+	// required
+    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);
+	// Chunk size of stream update in samples.  This will be the amount of data passed to the user callback.
+	createsoundexinfo.decodebuffersize  = 44100;
+	// Length of PCM data in bytes of whole song (for Sound::getLength)
+    //createsoundexinfo.length            = 44100 * num_channels * sizeof(signed short);
+	//createsoundexinfo.length            = length * sizeof(signed short);
+	createsoundexinfo.length            = length * sizeof(float);
+	// Number of channels in the sound.
+    createsoundexinfo.numchannels       = num_channels;
+	// Default playback rate of sound.
+    createsoundexinfo.defaultfrequency  = 44100;
+	// Data format of sound.
+    //createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;
+    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCMFLOAT;
+	// User callback for reading
+    createsoundexinfo.pcmreadcallback  	= NULL;
+	// User callback for seeking.
+    createsoundexinfo.pcmsetposcallback = NULL;
+
+	/*
+	signed short * sdata = (signed short *)malloc(length*sizeof(signed short));
+	for (int i = 0; i < length; i++) {
+		sdata[i] = (signed short)(255 * data[i]);
+	}
+	*/
+
+	// create the sound
+	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
+    //result = system->createSound((const char *)sdata, mode, &createsoundexinfo, &tmpsound);
+	result = system->createSound((const char *)data, mode, &createsoundexinfo, &tmpsound);
+	ERRCHECK(result);
+
+
+	// play the sound
+	printf("playing sound\n");
+	result = system->playSound(FMOD_CHANNEL_FREE, tmpsound, false, &tmpchannel);
+
+	Sleep(2);
 }
 
 void SoundManager::PlayUserCreatedSound() {
@@ -286,3 +356,20 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
 }
 
 //SoundManager * Sound_Manager = new SoundManager();
+
+
+
+void SoundManager::fileLoader(){
+       std::string filename = "matlab/rawr.txt";
+       float curr_freq;
+       std::filebuf fb;
+
+       fb.open(filename, std::ios::in);
+       std::istream is(&fb);
+
+       for (int i = 0; i < 22050; i++) {
+               is >> curr_freq;
+               stream[i] = curr_freq;
+       }
+       fb.close();
+}
