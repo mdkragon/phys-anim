@@ -3,10 +3,16 @@
 #include "Ground.h"
 #include "Sphere.h"
 #include "Material.h"
+#include <limits>
 #include <cassert>
 #include <TestHarness.h>
 #include <vector>
 #include <algorithm>
+
+
+// fixes for weird compile error on illegal token on right side of :: for max and min
+#undef min
+#undef max
 
 namespace
 {

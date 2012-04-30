@@ -4,6 +4,9 @@
 #include "Material.h"
 #include <TestHarness.h>
 
+#include <iostream>
+#include <fstream>
+
 namespace
 {
 	float inf = std::numeric_limits<float>::infinity();
@@ -428,10 +431,12 @@ Eigen::VectorXd RigidBody::calculateSound() {
 	//Eigen::MatrixXcd mode_resp = Eigen::MatrixXcd::Zero(nmode, nsample);
 	Eigen::VectorXd sample = Eigen::VectorXd::Zero(nsample); // sample matrix
 
+	double max = 0;
+
 	// summing modes
 	for (int i =0; i < nsample; i++) {
 		complex<double> modes = 0; 
-		t = dt * (i+1);
+		t = M_PI * (i+1) / 100 ; //dt * (i+1);
 		for (int j = 0; j < nmode; j++) {
 			// mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
 			complex<double> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
@@ -439,11 +444,30 @@ Eigen::VectorXd RigidBody::calculateSound() {
 			modes = modes + v * (c(j) * exp(W_plus(j) *t) + c_bar(j) * exp (W_minus(j) * t));
 		}
 		sample(i) = modes.real(); 
+
+		if (abs(sample(i) > max)) {
+			max =abs(sample(i));
+		}
 	}
+
+	sample = sample/max; // normalize it... 
+
+	/*
+	ofstream myfile;
+  myfile.open ("matlab/rawr.txt");
+  for (int i = 0 ; i < nsample; i++) {
+	myfile << sample(i) << " "; 
+  }
+  
+  myfile.close();
+  */
 
 	//std::cout << "sample 1: " << sample(0) << endl;
 	//std::cout << "sample 2: " << sample(1) << endl;
 	//std::cout << "sample 3: " << sample(2) << endl;
 	//std::cout<<sample<<endl;
+
+
+
 	return sample;
 }

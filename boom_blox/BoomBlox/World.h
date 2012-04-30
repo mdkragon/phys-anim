@@ -8,6 +8,19 @@
 #include "Extent.h"
 #include <Eigen\Dense>
 
+
+//#include "Global.h"
+
+#include "RigidBody.h"
+#include "TestHarness.h"
+#include "Box.h"
+#include "Sphere.h"
+#include "Ground.h"
+#include "Material.h"
+#include "SoundManager.h"
+
+
+class SoundManager;
 class RigidBody;
 struct Material;
 
@@ -84,8 +97,9 @@ private:
 
 	friend void RunBenchmark(std::string const& name, int frames);
 
-	// sound functions:
-	void calcSound(const RigidBody &a, const RigidBody &b); 
+	// sound stuff:
+
+	static void calcSound(RigidBody &a, RigidBody &b); 
 
 };
 

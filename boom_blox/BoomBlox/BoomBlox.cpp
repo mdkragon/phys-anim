@@ -1,5 +1,6 @@
 #include "Tests.h"
 #include <iostream>
+#include <limits>
 #include <string>
 #include <gl/glut.h>
 #include <OgreMath.h>
@@ -18,6 +19,9 @@
 #include <MMSystem.h>
 #include "SoundManager.h"
 
+// fixes for weird compile error on illegal token on right side of :: for max and min
+#undef min
+#undef max
 
 void SetupGraphics();
 void RunGame();

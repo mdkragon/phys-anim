@@ -114,6 +114,11 @@ SoundManager::SoundManager()
         ERRCHECK(result);
     }
 	
+
+	sounds = new std::vector<FMOD::Sound *>;
+	channels = new std::vector<FMOD::Channel *>;
+	
+//	InitUserCreatedSound();
 }
 
 SoundManager::~SoundManager()
@@ -121,6 +126,7 @@ SoundManager::~SoundManager()
 	/*
         Shut down
     */
+	
 	FMOD_RESULT result;
     result = sound1->release();
     ERRCHECK(result);
@@ -133,6 +139,7 @@ SoundManager::~SoundManager()
     ERRCHECK(result);
     result = system->release();
     ERRCHECK(result);
+	
 }
 
 void SoundManager::Update()
@@ -184,8 +191,11 @@ void SoundManager::InitUserCreatedSound()
 	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_HARDWARE;
 	// actual sound object
 	//FMOD::Sound *sound;
-	int channels = 2;
+	int num_channels = 2;
 	FMOD_RESULT result;
+
+	FMOD::Sound *tmpsound;
+	FMOD::Channel *tmpchannel;
 
 	// fill the sound info struct
 	memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
@@ -194,9 +204,9 @@ void SoundManager::InitUserCreatedSound()
 	// Chunk size of stream update in samples.  This will be the amount of data passed to the user callback.
 	createsoundexinfo.decodebuffersize  = 44100;
 	// Length of PCM data in bytes of whole song (for Sound::getLength)
-    createsoundexinfo.length            = 44100 * channels * sizeof(signed short) * 5;
+    createsoundexinfo.length            = 44100 * num_channels * sizeof(signed short) * 5;
 	// Number of channels in the sound.
-    createsoundexinfo.numchannels       = channels;
+    createsoundexinfo.numchannels       = num_channels;
 	// Default playback rate of sound.
     createsoundexinfo.defaultfrequency  = 44100;
 	// Data format of sound.
@@ -208,15 +218,32 @@ void SoundManager::InitUserCreatedSound()
 
 	// create the sound
 	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
-    result = system->createSound(0, mode, &createsoundexinfo, &usersound);
+    result = system->createSound(0, mode, &createsoundexinfo, &tmpsound);
     ERRCHECK(result);
+	sounds->push_back(tmpsound);
+	channels->push_back(tmpchannel);
 }
 
 void SoundManager::PlayUserCreatedSound() {
 	FMOD_RESULT result;
 
+	while(!(sounds->empty())) { // while sounds vector isn't empty
+		FMOD::Sound * current = sounds->at(sounds->size()-1);
+		FMOD::Channel * curChannel = channels->at(channels->size()-1);
+		result = system->playSound(FMOD_CHANNEL_FREE, current, false, &curChannel);
+		sounds->pop_back();
+		channels->pop_back();
+		ERRCHECK(result);
+
+		// relase sounds
+		// don't release yet, as soon as you release, the sound goes away
+		//result = current->release();
+		//ERRCHECK(result);
+	}
+	/*
 	result = system->playSound(FMOD_CHANNEL_FREE, usersound, false, &channel1);
 	ERRCHECK(result);
+	*/
 }
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
@@ -226,6 +253,13 @@ FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned i
     static float  v1 = 0, v2 = 0;        // velocity
     signed short *stereo16bitbuffer = (signed short *)data;
 
+	/*
+	for (count = 0; count<datalen; count++) {
+		*stereo16bitbuffer++ = (signed short)(50 * sin((float)count));
+	}
+	*/
+
+	
     for (count=0; count<datalen>>2; count++)        // >>2 = 16bit stereo (4 bytes per sample)
     {
         *stereo16bitbuffer++ = (signed short)(sin(t1) * 32767.0f);    // left channel
@@ -237,7 +271,9 @@ FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned i
         v2 += (float)(sin(t2) * 0.002f);
     }
 
-    return FMOD_OK;
+	
+
+    return FMOD_OK; 
 }
 
 
@@ -248,3 +284,5 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     */
     return FMOD_OK;
 }
+
+//SoundManager * Sound_Manager = new SoundManager();

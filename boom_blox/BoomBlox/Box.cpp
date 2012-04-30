@@ -2,13 +2,18 @@
 #include "Intersection.h"
 #include <gl/glut.h>
 #include <TestHarness.h>
+#include <limits>
 #include "Material.h"
+
+// fixes for weird compile error on illegal token on right side of :: for max and min
+#undef min
+#undef max
 
 Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
 	m_radius = halfSize.length();
-	initSoundScene();
-	calculateSound();
+//	initSoundScene();
+//	calculateSound();
 }
 
 Box* Box::Clone() const

@@ -7,6 +7,9 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
+#include "SoundManager.h"
+//#include "Global.h"
+
 struct Material;
 
 class RigidBody
@@ -125,6 +128,7 @@ private:
 
 	bool m_hasInfiniteMass;
 
+
 protected:
 	// Sound Generation Variables
 	vector<Vertex *> verticies;
@@ -147,8 +151,9 @@ protected:
 	void initSoundScene();
 
 public: 
+	
+	SoundManager * Sound_Manager;
 	Eigen::VectorXd calculateSound();
-
 };
 
 #endif
