@@ -13,7 +13,6 @@ SoundManager Sound_Manager;
 World::World()
 {
 	m_useSweepAndPrune = true;
-	//Sound_Manager.InitUserCreatedSound();
 }
 
 World::~World()
@@ -77,20 +76,6 @@ void World::Clear()
 	{
 		delete GetBody(i);
 	}
-	/*
-	for(int i=0; i<m_xExtents.size(); i++)
-	{
-		delete m_xExtents[i];
-	}
-	for(int i=0; i<m_yExtents.size(); i++)
-	{
-		delete m_yExtents[i];
-	}
-	for(int i=0; i<m_zExtents.size(); i++)
-	{
-		delete m_zExtents[i];
-	}
-	*/
 
 	for(int i=0; i<GetNumMaterials(); i++)
 	{
@@ -420,8 +405,6 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 		// sticking collision; j is acceptable
 	
 		// play sound
-		//soundManager.PlayTestSound();
-		//Sound_Manager.PlayUserCreatedSound();
 		calcSound(a, b);
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
@@ -429,8 +412,6 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 		j = jn * N - mu * jn * T;	
 
 		// play sound
-		//soundManager.PlayTestSound();
-		//Sound_Manager.PlayUserCreatedSound();
 		calcSound(a, b);
 	}
 
@@ -595,11 +576,11 @@ void World::calcSound(RigidBody &a, RigidBody &b) {
 
 	g = dynamic_cast<Ground *>(&a);
 	if (g == 0) {  // g == 0 then cast not successful
-		a.calculateSound(Sound_Manager);
+		a.calculateSound(&Sound_Manager);
 	} 
 	g = dynamic_cast<Ground * > (&b);
 	if (g== 0) {
-		b.calculateSound(Sound_Manager);
+		b.calculateSound(&Sound_Manager);
 	}
 	
 	//b.calculateSound(Sound_Manager);

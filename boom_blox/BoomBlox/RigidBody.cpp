@@ -385,7 +385,7 @@ void RigidBody::initSoundScene() {
 	//std::cout << "this is minus:\n" << W_minus << endl;
 }
 
-Eigen::VectorXf RigidBody::calculateSound(SoundManager soundManager) {
+Eigen::VectorXf RigidBody::calculateSound(SoundManager *soundManager) {
 	// constants w00t
 	double duration = 0.5;
 	double fq = 44100;
@@ -454,9 +454,9 @@ Eigen::VectorXf RigidBody::calculateSound(SoundManager soundManager) {
 
 	sample = sample/max; // normalize it... 
 
-	soundManager.InitUserCreatedSample(&sample(0), sample.size());
-
-	/*
+	soundManager->InitUserCreatedSample(&sample(0), sample.size());
+	
+	
 	ofstream myfile;
 	myfile.open ("matlab/rawr.txt");
 	for (int i = 0 ; i < nsample; i++) {
@@ -464,8 +464,8 @@ Eigen::VectorXf RigidBody::calculateSound(SoundManager soundManager) {
 	}
 
 	myfile.close();
-	exit(2); 
-	*/
+	//exit(2); 
+	
 	//std::cout << "sample 1: " << sample(0) << endl;
 	//std::cout << "sample 2: " << sample(1) << endl;
 	//std::cout << "sample 3: " << sample(2) << endl;

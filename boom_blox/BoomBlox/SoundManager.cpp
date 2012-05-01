@@ -119,8 +119,6 @@ SoundManager::SoundManager()
 
 	sounds = new std::vector<FMOD::Sound *>;
 	channels = new std::vector<FMOD::Channel *>;
-	
-//	InitUserCreatedSound();
 
 	sounds = new std::vector<FMOD::Sound *>;
     channels = new std::vector<FMOD::Channel *>;
@@ -128,11 +126,10 @@ SoundManager::SoundManager()
 	int length = 22050;
     stream = (float*)malloc(sizeof (float) * length);
 
-	/*
+
     fileLoader();
 
 	InitUserCreatedSample(stream, length);
-	*/
 }
 
 SoundManager::~SoundManager()
@@ -272,18 +269,11 @@ void SoundManager::InitUserCreatedSample(float *data, int length)
     createsoundexinfo.pcmsetposcallback = NULL;
 
 	
-	signed short * sdata = (signed short *)malloc(length*sizeof(signed short));
-	for (int i = 0; i < length; i++) {
-		sdata[i] = (signed short)(255 * data[i]);
-	}
-	
-
 	printf("creating sound from data: %p\n", data);
 
 	// create the sound
 	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
-    //result = system->createSound((const char *)sdata, mode, &createsoundexinfo, &tmpsound);
-	result = system->createSound((const char *)data, mode, &createsoundexinfo, &tmpsound);
+  	result = system->createSound((const char *)data, mode, &createsoundexinfo, &tmpsound);
 	ERRCHECK(result);
 
 
@@ -297,6 +287,7 @@ void SoundManager::InitUserCreatedSample(float *data, int length)
 void SoundManager::PlayUserCreatedSound() {
 	FMOD_RESULT result;
 
+	/*
 	while(!(sounds->empty())) { // while sounds vector isn't empty
 		FMOD::Sound * current = sounds->at(sounds->size()-1);
 		FMOD::Channel * curChannel = channels->at(channels->size()-1);
@@ -310,6 +301,8 @@ void SoundManager::PlayUserCreatedSound() {
 		//result = current->release();
 		//ERRCHECK(result);
 	}
+	*/
+
 	/*
 	result = system->playSound(FMOD_CHANNEL_FREE, usersound, false, &channel1);
 	ERRCHECK(result);
