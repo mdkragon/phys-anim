@@ -8,6 +8,8 @@
 #undef min
 #undef max
 
+//SoundManager Sound_Manager(44100);
+//SoundManager Sound_Manager(8000);
 SoundManager Sound_Manager;
 
 World::World()
@@ -222,7 +224,7 @@ TEST(AdvanceVelocities, World)
 
 void World::AdvanceVelocities(float dT)
 {
-	Vector3 g(0.0, -9.8, 0.0);
+	Vector3 g(0.0f, -9.8f, 0.0f);
 
 	// TODO compute new linear velocities and angular momentum
 	for(int i = 0; i < GetNumBodies(); i++)
@@ -532,7 +534,7 @@ void World::SweepAndPrune(std::vector<Intersection> & intersections) {
 void World::TestExtentIntersection(std::vector<Extent> extents, Eigen::MatrixXi &pintersect) {
 	// increment the value for each possible intersection along each axis
 	std::vector<int> exStack;
-	for (int i = 0; i < extents.size(); i++) {
+	for (int i = 0; i < (int)extents.size(); i++) {
 		Extent extent = extents[i];
 		int bodyInd = extent.get_bodyInd();
 
@@ -542,7 +544,7 @@ void World::TestExtentIntersection(std::vector<Extent> extents, Eigen::MatrixXi 
 		} else {
 			// there is a possible collision with any objects that are on the stack
 			int begInd = 0;
-			for (int j = 0; j < exStack.size(); j++) {
+			for (int j = 0; j < (int)exStack.size(); j++) {
 				if (exStack[j] == bodyInd) {
 					begInd = j;
 				} else {
@@ -558,7 +560,7 @@ void World::TestExtentIntersection(std::vector<Extent> extents, Eigen::MatrixXi 
 
 void World::PrintExtentVector(const char *label, std::vector<Extent> extents) {
 	printf("%s:: ", label);
-	for (int i = 0; i < extents.size(); i++) {
+	for (int i = 0; i < (int)extents.size(); i++) {
 		Extent extent = extents[i];
 		printf("%s:%d:%5.2f  ", extent.is_beginning() ? "b" : "e", 
 								extent.get_bodyInd(),

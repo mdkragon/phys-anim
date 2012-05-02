@@ -13,7 +13,7 @@ void ERRCHECK(FMOD_RESULT result)
     }
 }
 
-SoundManager::SoundManager()
+SoundManager::SoundManager(int userCreatedFrequency)
 {
 	/*
         Create a System object and initialize.
@@ -102,8 +102,7 @@ SoundManager::SoundManager()
     result = system->createSound("Bounce.wav", FMOD_SOFTWARE | FMOD_3D, 0, &sound3);
     ERRCHECK(result);
 
-
-
+	m_userCreatedFrequency = userCreatedFrequency;
 }
 
 SoundManager::~SoundManager()
@@ -124,7 +123,6 @@ SoundManager::~SoundManager()
     ERRCHECK(result);
     result = system->release();
     ERRCHECK(result);
-	
 }
 
 void SoundManager::SetListenerPose(Vector3 pos, float pitch, float heading)
@@ -195,8 +193,12 @@ void SoundManager::PlayTestSound(Vector3 pos, Vector3 vel)
 	ERRCHECK(result);
 }
 
+int SoundManager::GetUserCreatedFrequency()
+{
+	return m_userCreatedFrequency;
+}
 
-void SoundManager::InitUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel)
+void SoundManager::PlayUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel)
 {
 	FMOD_RESULT result;
 	FMOD::Sound *sound;
@@ -218,13 +220,13 @@ void SoundManager::InitUserCreatedSample(float *data, int length, Vector3 pos, V
 	// required
     createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);
 	// Chunk size of stream update in samples.  This will be the amount of data passed to the user callback.
-	createsoundexinfo.decodebuffersize  = 44100;
+	createsoundexinfo.decodebuffersize  = m_userCreatedFrequency;
 	// Length of PCM data in bytes of whole song (for Sound::getLength)
 	createsoundexinfo.length            = length * sizeof(float);
 	// Number of channels in the sound.
     createsoundexinfo.numchannels       = num_channels;
 	// Default playback rate of sound.
-    createsoundexinfo.defaultfrequency  = 44100;
+    createsoundexinfo.defaultfrequency  = m_userCreatedFrequency;
 	// Data format of sound.
     createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCMFLOAT;
 	// User callback for reading (we do not use this)

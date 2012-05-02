@@ -379,7 +379,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 
 	// constants w00t
 	float duration = 0.5;
-	float fq = 44100;
+	float fq = soundManager->GetUserCreatedFrequency();
 	float dt = M_PI/100.0; // 1/fq;
 	
 	int dimension = verticies.size();
@@ -462,5 +462,5 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	sample = sample/max;
 
 	// play the sound
-	soundManager->InitUserCreatedSample(&sample(0), sample.size(), GetPosition(), GetVelocity());
+	soundManager->PlayUserCreatedSample(&sample(0), sample.size(), GetPosition(), GetVelocity());
 }

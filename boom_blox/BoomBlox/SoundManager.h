@@ -19,7 +19,7 @@
 class SoundManager
 {
 public:
-	SoundManager();
+	SoundManager(int userCreatedFrequency = 44100);
 	~SoundManager();
 
 	void SetListenerPose(Vector3 pos, float cameraPitch, float cameraHeading);
@@ -28,12 +28,11 @@ public:
 
 	void PlayTestSound(Vector3 pos, Vector3 vel);
 
-	void InitCollisionSound();
-
-	void InitUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel);
+	void PlayUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel);
+	
+	int GetUserCreatedFrequency();
 	
 	void SoundManager::fileLoader();
-	
     float * stream;
 
 private:
@@ -47,16 +46,15 @@ private:
 	float m_listenerPitch;
 	float m_listenerHeading;
 	
+	int m_userCreatedFrequency;
+
 	// vector of sounds;
 	std::vector<FMOD::Sound *> *sounds;
 	std::vector<FMOD::Channel *> *channels;
 
     unsigned int     version;
     char             name[256];
-    int              key, numdrivers;
-    bool             listenerflag;// = true;
-    FMOD_VECTOR      listenerpos;//  = { 0.0f, 0.0f, -1.0f * DISTANCEFACTOR };
-	
+    int              key, numdrivers;	
 };
 
 #endif
