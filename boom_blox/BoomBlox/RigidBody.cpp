@@ -373,69 +373,60 @@ void RigidBody::initSoundScene() {
 	this->meshify(5);
 	// first calcualte K
 	this->getK(K);
-	//std::cout << "K:\n" << K << endl;
 	// then get M
 	this->getM(M);
-	//std::cout << "M:\n" << M << endl;
 	this->diagonalizeK(K, G, D, Ginv);
-	//std::cout << "D:\n" << D << endl;
 	// construct the W
 	constructW(W_plus, W_minus);
-	//std::cout << "this is plus:\n"<< W_plus << endl;
-	//std::cout << "this is minus:\n" << W_minus << endl;
 }
 
-Eigen::VectorXf RigidBody::calculateSound(SoundManager *soundManager) {
+void RigidBody::calculateSound(SoundManager *soundManager) {
+	// TODO: only calculate sound if close enough to hear
+
 	// constants w00t
 	double duration = 0.5;
 	double fq = 44100;
-	double dt = 1/ fq;
-
+	double dt = M_PI/100.0; // 1/fq;
+	
 	int dimension = verticies.size();
 
-
-	// force/impulse (will be later passed from colissions
+	// TODO: force/impulse (will be later passed from colissions
 	Eigen::VectorXcd f = Eigen::VectorXcd::Zero(3 * dimension);
 	f(0) = 1; // arbiturarily
-	//cout << "f:\n" << f << endl;
 
 	// compute transformed impulse
 	Eigen::VectorXcd g = Ginv * f;
-	//cout << "g:\n" << g << endl;
 	// transform M to vector
 	Eigen::VectorXd m = M.diagonal();
 	
 	// time of impact / colission
-	complex<double> t0 = 0;  // has to be complex to multiply W_plus
-
+	//	 We will independently calculate all sound responses so this is always zero?
+	complex<double> t0 = 0;
 	
 	// init constant terms to 0
 	Eigen::VectorXcd c = Eigen::VectorXcd::Zero(3 * dimension); 
 
 	// update constants
 	// c = c + g./((m .* (w_plus - w_minus)) .* exp(w_plus * t0));
-	// how is c a 24 x 3 matrix? 
 	for (int i = 0; i < dimension * 3; i++) {
 		c(i) = c(i) +  g(i) / (( m(i) * (W_plus(i) - W_minus(i))) * exp(W_plus(i) * t0));
 	}
-	Eigen::VectorXcd c_bar = c.conjugate();//conj(c);
-	//std::cout << "c: \n" << c << endl;
-	//std::cout << "c_bar: \n" << c_bar << endl;
+	Eigen::VectorXcd c_bar = c.conjugate();
 	
 	// current time
 	complex<double> t = 0; // has to be complex 
 
-	// double nmode = D.diagonal().norm(); // because i'm stupid lol
-	int nmode = dimension * 3;//D.diagonal().size();
+	int nmode = dimension * 3;
 	int nsample = fq * duration;
-	//Eigen::MatrixXcd mode_resp = Eigen::MatrixXcd::Zero(nmode, nsample);
-	//Eigen::VectorXd sample = Eigen::VectorXd::Zero(nsample); // sample matrix
-	Eigen::VectorXf sample = Eigen::VectorXf::Zero(nsample); // sample matrix
+	Eigen::VectorXf sample = Eigen::VectorXf(nsample);
 
-	//double max = 0;
 	float max = 0;
 
 	// summing modes
+	/*************************************************
+	// I am not sure why I thought the mode response would be calculated this way...
+	//   it doesn't really make sense to have x_{t} = v * x_{t-1}
+	//
 	for (int i =0; i < nsample; i++) {
 		complex<double> modes = 0; 
 		t = M_PI * (i+1) / 100 ; //dt * (i+1);
@@ -448,30 +439,36 @@ Eigen::VectorXf RigidBody::calculateSound(SoundManager *soundManager) {
 		sample(i) = (float)modes.real(); 
 
 		if (abs(sample(i) > max)) {
-			max =abs(sample(i));
+			max = abs(sample(i));
 		}
 	}
-
-	sample = sample/max; // normalize it... 
-
-	soundManager->InitUserCreatedSample(&sample(0), sample.size());
+	*************************************************/
 	
-	
-	ofstream myfile;
-	myfile.open ("matlab/rawr.txt");
-	for (int i = 0 ; i < nsample; i++) {
-		myfile << sample(i) << " "; 
+	// vector to store the previous response for each mode
+	Eigen::VectorXcd mode_t_minus_1 = Eigen::VectorXcd::Zero(3 * dimension); 
+	for (int i =0; i < nsample; i++) {
+		t = dt * (i+1);
+		sample(i) = 0.0;
+		
+		for (int j = 0; j < nmode; j++) {
+			// mode velocity
+			//   mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
+			complex<double> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
+			
+			mode_t_minus_1(j) += v;
+
+			// sum of all the modes for this sample
+			sample(i) += mode_t_minus_1(j).real();
+		}
+
+		if (abs(sample(i)) > max) {
+			max = abs(sample(i));
+		}
 	}
-
-	myfile.close();
-	//exit(2); 
 	
-	//std::cout << "sample 1: " << sample(0) << endl;
-	//std::cout << "sample 2: " << sample(1) << endl;
-	//std::cout << "sample 3: " << sample(2) << endl;
-	//std::cout<<sample<<endl;
+	// normalize it... 
+	sample = sample/max;
 
-
-
-	return sample;
+	// play the sound
+	soundManager->InitUserCreatedSample(&sample(0), sample.size(), GetPosition(), GetVelocity());
 }

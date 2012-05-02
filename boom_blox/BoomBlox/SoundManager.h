@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <Eigen\Dense>
+#include <OgreMath.h>
 
 //#include "Global.h"
 #include "fmod.hpp"
@@ -21,18 +22,17 @@ public:
 	SoundManager();
 	~SoundManager();
 
+	void SetListenerPose(Vector3 pos, float cameraPitch, float cameraHeading);
+
 	void Update();
 
-	void PlayTestSound();
-	void InitUserCreatedSound();
-	void PlayUserCreatedSound();
+	void PlayTestSound(Vector3 pos, Vector3 vel);
 
 	void InitCollisionSound();
 
-	void InitUserCreatedSample(float *data, int length);
+	void InitUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel);
 	
 	void SoundManager::fileLoader();
-
 	
     float * stream;
 
@@ -43,7 +43,10 @@ private:
     FMOD_SPEAKERMODE speakermode;
     FMOD_CAPS        caps;
 
-
+	Vector3 m_listenerPosition;
+	float m_listenerPitch;
+	float m_listenerHeading;
+	
 	// vector of sounds;
 	std::vector<FMOD::Sound *> *sounds;
 	std::vector<FMOD::Channel *> *channels;
@@ -55,11 +58,5 @@ private:
     FMOD_VECTOR      listenerpos;//  = { 0.0f, 0.0f, -1.0f * DISTANCEFACTOR };
 	
 };
-
-
-FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype);
-FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen);
-
-//extern SoundManager* Sound_Manager;
 
 #endif

@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 	// LOOK if you wanted, you could load a level right here for testing
 	LoadWorldIntoGame("../Worlds/justground.xml");
 	//LoadWorldIntoGame("../Worlds/seesaw.xml");
-	//LoadWorldIntoGame("../Worlds/test_many.xml");
+	//LoadWorldIntoGame("../Worlds/click.xml");
 
 	g_world.SetUseSweepAndPrune(false);
 	RunGame();
@@ -98,7 +98,7 @@ void SetupGraphics()
 void display()
 {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -115,6 +115,9 @@ void display()
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glEnable(GL_COLOR_MATERIAL);
+
+	// set listener position
+	g_world.SetListenerPose(g_cameraPos, g_cameraPitch, g_cameraHeading);
 
 	g_world.Render();
 

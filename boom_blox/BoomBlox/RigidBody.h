@@ -153,7 +153,7 @@ protected:
 public: 
 	
 	SoundManager * Sound_Manager;
-	Eigen::VectorXf calculateSound(SoundManager *soundManager);
+	void calculateSound(SoundManager *soundManager);
 };
 
 #endif

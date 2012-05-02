@@ -81,7 +81,7 @@ SoundManager::SoundManager()
     result = system->set3DSettings(1.0, DISTANCEFACTOR, 1.0f);
     ERRCHECK(result);
 
-
+	
 	/*
         Load some sounds
     */
@@ -99,37 +99,11 @@ SoundManager::SoundManager()
     result = sound2->setMode(FMOD_LOOP_NORMAL);
     ERRCHECK(result);
 
-    result = system->createSound("Bounce.wav", FMOD_SOFTWARE | FMOD_2D, 0, &sound3);
+    result = system->createSound("Bounce.wav", FMOD_SOFTWARE | FMOD_3D, 0, &sound3);
     ERRCHECK(result);
-	
-	/*
-	{
-        FMOD_VECTOR pos = { -10.0f * DISTANCEFACTOR, 0.0f, 0.0f };
-        FMOD_VECTOR vel = {  0.0f, 0.0f, 0.0f };
-
-        result = system->playSound(FMOD_CHANNEL_FREE, sound1, true, &channel1);
-        ERRCHECK(result);
-        result = channel1->set3DAttributes(&pos, &vel);
-        ERRCHECK(result);
-        result = channel1->setPaused(false);
-        ERRCHECK(result);
-    }
-	*/
-	
-
-	sounds = new std::vector<FMOD::Sound *>;
-	channels = new std::vector<FMOD::Channel *>;
-
-	sounds = new std::vector<FMOD::Sound *>;
-    channels = new std::vector<FMOD::Channel *>;
-
-	int length = 22050;
-    stream = (float*)malloc(sizeof (float) * length);
 
 
-    fileLoader();
 
-	InitUserCreatedSample(stream, length);
 }
 
 SoundManager::~SoundManager()
@@ -153,102 +127,92 @@ SoundManager::~SoundManager()
 	
 }
 
+void SoundManager::SetListenerPose(Vector3 pos, float pitch, float heading)
+{
+	// only set attributes if they have changed
+	if (pos == m_listenerPosition && pitch == m_listenerPitch && heading == m_listenerHeading) {
+		return;
+	}
+
+	// TODO: is this correct...
+	//  graphics axis is: x-right, y-up, z-out of screen
+	//  sound axis uses left handed: x-right, y-up, z-in to screen
+	//    forward vector is -z axis of camera
+	//    up vector is +y of camera
+	
+	// create rotation matrix
+	Matrix3 Rpitch;
+	Matrix3 Rheading;
+	Rpitch.FromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), pitch);
+	Rheading.FromAxisAngle(Vector3(0.0f, 1.0f, 0.0f), heading);
+	Vector3 forward = Rpitch * Rheading * Vector3(0.0f, 0.0f, -1.0f);
+	Vector3 up = Rpitch * Rheading * Vector3(0.0f, 1.0f, 0.0f);
+
+	
+	// negate z component for left handed coordinate system
+	FMOD_VECTOR listenerPosition = {pos.x, pos.y, -pos.z};
+	FMOD_VECTOR listenerForward = {forward.x, forward.y, -forward.z};
+	FMOD_VECTOR listenerUp = {up.x, up.y, -up.z};
+
+	/*
+	printf("setting listener pose to: (%04.2f, %04.2f, %04.2f), (%04.2f, %04.2f, %04.2f), (%04.2f, %04.2f, %04.2f)\n",
+				listenerPosition.x, listenerPosition.y, listenerPosition.z, 
+				listenerForward.x, listenerForward.y, listenerForward.z,
+				listenerUp.x, listenerUp.y, listenerUp.z); 
+    */
+
+	FMOD_RESULT result;
+	result = system->set3DListenerAttributes(0, &listenerPosition, 0, &listenerForward, &listenerUp);
+	ERRCHECK(result);
+
+	// store current pose
+	m_listenerPosition = pos;
+	m_listenerPitch = pitch;
+	m_listenerHeading = heading;
+}
+
 void SoundManager::Update()
 {
 	system->update();
 }
 
-void SoundManager::PlayTestSound()
+void SoundManager::PlayTestSound(Vector3 pos, Vector3 vel)
 {
 	FMOD_RESULT result;
 
-	result = system->playSound(FMOD_CHANNEL_FREE, sound3, false, &channel3);
+	// convert position and velocity to FMOD vectors
+	//	fmod uses left handed coordinate system so negate z components
+	FMOD_VECTOR fpos = {pos.x, pos.y, -pos.z};
+	FMOD_VECTOR fvel = {vel.x, vel.y, -vel.z};
+
+	result = system->playSound(FMOD_CHANNEL_FREE, sound3, true, &channel3);
 	ERRCHECK(result);
-	
-	
- //   /*
- //       Play sounds at certain positions
- //   */
- //   {
- //       FMOD_VECTOR pos = { -10.0f * DISTANCEFACTOR, 0.0f, 0.0f };
- //       FMOD_VECTOR vel = {  0.0f, 0.0f, 0.0f };
-
- //       result = system->playSound(FMOD_CHANNEL_FREE, sound1, true, &channel1);
- //       ERRCHECK(result);
- //       result = channel1->set3DAttributes(&pos, &vel);
- //       ERRCHECK(result);
- //       result = channel1->setPaused(false);
- //       ERRCHECK(result);
- //   }
-
- //   {
- //       FMOD_VECTOR pos = { 15.0f * DISTANCEFACTOR, 0.0f, 0.0f };
- //       FMOD_VECTOR vel = { 0.0f, 0.0f, 0.0f };
-
- //       result = system->playSound(FMOD_CHANNEL_FREE, sound2, true, &channel2);
- //       ERRCHECK(result);
- //       result = channel2->set3DAttributes(&pos, &vel);
- //       ERRCHECK(result);
- //       result = channel2->setPaused(false);
- //       ERRCHECK(result);
- //   }
-}
-
-void SoundManager::InitUserCreatedSound()
-{
-	// sound info struct
-	FMOD_CREATESOUNDEXINFO  createsoundexinfo;
-	// sound mode
-	//FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_HARDWARE;
-	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_SOFTWARE;
-	// actual sound object
-	//FMOD::Sound *sound;
-	int num_channels = 2;
-	FMOD_RESULT result;
-
-	FMOD::Sound *tmpsound;
-	FMOD::Channel *tmpchannel;
-
-	// fill the sound info struct
-	memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
-	// required
-    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);
-	// Chunk size of stream update in samples.  This will be the amount of data passed to the user callback.
-	createsoundexinfo.decodebuffersize  = 44100;
-	// Length of PCM data in bytes of whole song (for Sound::getLength)
-    createsoundexinfo.length            = 44100 * num_channels * sizeof(signed short) * 5;
-	// Number of channels in the sound.
-    createsoundexinfo.numchannels       = num_channels;
-	// Default playback rate of sound.
-    createsoundexinfo.defaultfrequency  = 44100;
-	// Data format of sound.
-    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;
-	// User callback for reading
-    createsoundexinfo.pcmreadcallback  	= pcmreadcallback;
-	// User callback for seeking.
-    createsoundexinfo.pcmsetposcallback = pcmsetposcallback;
-
-	// create the sound
-	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
-    result = system->createSound(0, mode, &createsoundexinfo, &tmpsound);
+	// set the 3D position
+    result = channel3->set3DAttributes(&fpos, &fvel);
     ERRCHECK(result);
-	sounds->push_back(tmpsound);
-	channels->push_back(tmpchannel);
+	// unpause (play) the sound
+    result = channel3->setPaused(false);
+	ERRCHECK(result);
 }
 
-void SoundManager::InitUserCreatedSample(float *data, int length)
+
+void SoundManager::InitUserCreatedSample(float *data, int length, Vector3 pos, Vector3 vel)
 {
+	FMOD_RESULT result;
+	FMOD::Sound *sound;
+	FMOD::Channel *channel;
+	int num_channels = 1;
+
+	// convert position and velocity to FMOD vectors
+	//	fmod uses left handed coordinate system so negate z components
+	FMOD_VECTOR fpos = {pos.x, pos.y, -pos.z};
+	FMOD_VECTOR fvel = {vel.x, vel.y, -vel.z};
+
 	// sound info struct
 	FMOD_CREATESOUNDEXINFO  createsoundexinfo;
 	// sound mode
 	FMOD_MODE mode = FMOD_3D | FMOD_OPENUSER | FMOD_LOOP_OFF | FMOD_SOFTWARE | FMOD_CREATESAMPLE | FMOD_OPENRAW | FMOD_OPENMEMORY;
 	
-
-	int num_channels = 1;
-	FMOD_RESULT result;
-
-	FMOD::Sound *tmpsound;
-
 	// fill the sound info struct
 	memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
 	// required
@@ -263,93 +227,27 @@ void SoundManager::InitUserCreatedSample(float *data, int length)
     createsoundexinfo.defaultfrequency  = 44100;
 	// Data format of sound.
     createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCMFLOAT;
-	// User callback for reading
+	// User callback for reading (we do not use this)
     createsoundexinfo.pcmreadcallback  	= NULL;
-	// User callback for seeking.
+	// User callback for seeking (we do not use this)
     createsoundexinfo.pcmsetposcallback = NULL;
-
-	
-	printf("creating sound from data: %p\n", data);
 
 	// create the sound
 	//   FMOD_RESULT F_API createSound (const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound);
-  	result = system->createSound((const char *)data, mode, &createsoundexinfo, &tmpsound);
+  	result = system->createSound((const char *)data, mode, &createsoundexinfo, &sound);
 	ERRCHECK(result);
 
 
-	// play the sound
-	printf("playing sound\n");
-	result = system->playSound(FMOD_CHANNEL_FREE, tmpsound, false, NULL);
-
-	//Sleep(2);
-}
-
-void SoundManager::PlayUserCreatedSound() {
-	FMOD_RESULT result;
-
-	/*
-	while(!(sounds->empty())) { // while sounds vector isn't empty
-		FMOD::Sound * current = sounds->at(sounds->size()-1);
-		FMOD::Channel * curChannel = channels->at(channels->size()-1);
-		result = system->playSound(FMOD_CHANNEL_FREE, current, false, &curChannel);
-		sounds->pop_back();
-		channels->pop_back();
-		ERRCHECK(result);
-
-		// relase sounds
-		// don't release yet, as soon as you release, the sound goes away
-		//result = current->release();
-		//ERRCHECK(result);
-	}
-	*/
-
-	/*
-	result = system->playSound(FMOD_CHANNEL_FREE, usersound, false, &channel1);
+	// start the sound paused
+	result = system->playSound(FMOD_CHANNEL_FREE, sound, true, &channel);
 	ERRCHECK(result);
-	*/
+	// set the 3D position
+    result = channel->set3DAttributes(&fpos, &fvel);
+    ERRCHECK(result);
+	// unpause (play) the sound
+    result = channel->setPaused(false);
+	ERRCHECK(result);
 }
-
-FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
-{
-    unsigned int  count;
-    static float  t1 = 0, t2 = 0;        // time
-    static float  v1 = 0, v2 = 0;        // velocity
-    signed short *stereo16bitbuffer = (signed short *)data;
-
-	/*
-	for (count = 0; count<datalen; count++) {
-		*stereo16bitbuffer++ = (signed short)(50 * sin((float)count));
-	}
-	*/
-
-	
-    for (count=0; count<datalen>>2; count++)        // >>2 = 16bit stereo (4 bytes per sample)
-    {
-        *stereo16bitbuffer++ = (signed short)(sin(t1) * 32767.0f);    // left channel
-        *stereo16bitbuffer++ = (signed short)(sin(t2) * 32767.0f);    // right channel
-
-        t1 += 0.01f   + v1;
-        t2 += 0.0142f + v2;
-        v1 += (float)(sin(t1) * 0.002f);
-        v2 += (float)(sin(t2) * 0.002f);
-    }
-
-	
-
-    return FMOD_OK; 
-}
-
-
-FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype)
-{
-    /*
-        This is useful if the user calls Channel::setPosition and you want to seek your data accordingly.
-    */
-    return FMOD_OK;
-}
-
-//SoundManager * Sound_Manager = new SoundManager();
-
 
 
 void SoundManager::fileLoader(){

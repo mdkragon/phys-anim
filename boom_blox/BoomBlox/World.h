@@ -61,6 +61,8 @@ public:
 	void Simulate(float dT);
 
 	void SetUseSweepAndPrune(bool useSweepAndPrune);
+	
+	void World::SetListenerPose(Vector3 pos, float cameraPitch, float cameraHeading);
 
 private:
 	void FillFrom(World const& other);
