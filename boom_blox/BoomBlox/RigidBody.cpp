@@ -274,7 +274,7 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 	for (int i = 0; i < dimension; i ++) {
 		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
 		int a = this->verticies.at(i)->getId(); // a is first index
-		for (int j = 0; j < neighbors.size(); j++) {
+		for (int j = 0; j < (int)neighbors.size(); j++) {
 			int b = neighbors.at(j)->getId(); // b is the neighbor's id
 
 			// twice diagaonal 
@@ -380,7 +380,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	// constants w00t
 	float duration = 0.5;
 	float fq = soundManager->GetUserCreatedFrequency();
-	float dt = M_PI/100.0; // 1/fq;
+	complex<float> dt = M_PI/100.0; // 1/fq;
 	
 	int dimension = verticies.size();
 
@@ -436,6 +436,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	}
 	*************************************************/
 	
+	/*************************************************
 	// vector to store the previous response for each mode
 	Eigen::VectorXcf mode_t_minus_1 = Eigen::VectorXcf::Zero(3 * dimension);
 	for (int i =0; i < nsample; i++) {
@@ -448,6 +449,37 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 			
 			// TODO: should this be v * dt?
 			mode_t_minus_1(j) += v;
+
+			// sum of all the modes for this sample
+			sample(i) += mode_t_minus_1(j).real();
+		}
+
+		if (abs(sample(i)) > max) {
+			max = abs(sample(i));
+		}
+	}
+	*************************************************/
+
+	// vector to store the previous response for each mode
+	Eigen::VectorXcf mode_t_minus_1 = Eigen::VectorXcf::Zero(3 * dimension);
+	Eigen::VectorXcf v_wplus = c.array() * W_plus.array();
+	Eigen::VectorXcf v_wminus = c_bar.array() * W_minus.array();
+	for (int i = 0; i < nsample; i++) {
+		complex<float> t = dt * complex<float>(i+1);
+		
+		for (int j = 0; j < nmode; j++) {
+			// mode velocity
+			//   mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
+			//complex<float> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
+			
+			// This should be slightly faster, 2 floating point complex multiplies instead of 6... still not real time
+			//		v = c * w * e^(w * (t + dt)) == c * w * e^(w*t) * e^(w*dt)
+			//		only need to multiply the previous value by e^(w*dt) to get the new velocity
+			v_wplus(j) *= exp(W_plus(j) * dt);
+			v_wminus(j) *= exp(W_minus(j) * dt);
+			
+			// TODO: should this be v * dt?
+			mode_t_minus_1(j) += v_wplus(j) + v_wminus(j);
 
 			// sum of all the modes for this sample
 			sample(i) += mode_t_minus_1(j).real();
