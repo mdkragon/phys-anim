@@ -132,21 +132,21 @@ private:
 protected:
 	// Sound Generation Variables
 	vector<Vertex *> verticies;
-	Eigen::MatrixXd K; 
-	Eigen::MatrixXd G;
-	Eigen::MatrixXd D; // eigen value
-	Eigen::MatrixXd Ginv;
-	Eigen::MatrixXd M; 
+	Eigen::MatrixXf K; 
+	Eigen::MatrixXf G;
+	Eigen::VectorXf D; 
+	Eigen::MatrixXf Ginv;
+	Eigen::VectorXf M; 
 
-	Eigen::VectorXcd W_plus; // omega
-	Eigen::VectorXcd W_minus;
+	Eigen::VectorXcf W_plus; // omega
+	Eigen::VectorXcf W_minus;
 
 	virtual void meshify(int divide) = 0;
-	void getK(Eigen::MatrixXd &K);
-	void diagonalizeK(const Eigen::MatrixXd &K, Eigen::MatrixXd &G,
-								Eigen::MatrixXd &D, Eigen::MatrixXd &Ginv);
-	void getM(Eigen::MatrixXd &M);
-	void constructW(Eigen::VectorXcd &W_plus, Eigen::VectorXcd &W_minus);
+	void getK(Eigen::MatrixXf &K);
+	void diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
+								Eigen::VectorXf &D, Eigen::MatrixXf &Ginv);
+	void getM(Eigen::VectorXf &M);
+	void constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus);
 
 	void initSoundScene();
 

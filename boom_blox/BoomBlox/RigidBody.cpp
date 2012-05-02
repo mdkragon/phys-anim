@@ -267,9 +267,9 @@ void RigidBody::Render() const
 }
 
 
-void RigidBody::getK(Eigen::MatrixXd &K){
+void RigidBody::getK(Eigen::MatrixXf &K){
 	int dimension = this->verticies.size(); // there are this many verticies
-	Eigen::MatrixXd K_Matrix = Eigen::MatrixXd::Zero(dimension, dimension); // creates matrix
+	Eigen::MatrixXf K_Matrix = Eigen::MatrixXf::Zero(dimension, dimension); // creates matrix
 	
 	for (int i = 0; i < dimension; i ++) {
 		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
@@ -288,82 +288,76 @@ void RigidBody::getK(Eigen::MatrixXd &K){
 		
 	// now the K is created for one dimention
 	// so we need to make the K matrix 3N x 3N
+	Eigen::MatrixXf K_expand = Eigen::MatrixXf::Zero(3*dimension, 3*dimension); 
+	K_expand <<                                    K_Matrix, Eigen::MatrixXf::Zero(dimension, dimension), Eigen::MatrixXf::Zero(dimension, dimension),
+              Eigen::MatrixXf::Zero(dimension, dimension),                                    K_Matrix, Eigen::MatrixXf::Zero(dimension, dimension),
+              Eigen::MatrixXf::Zero(dimension, dimension), Eigen::MatrixXf::Zero(dimension, dimension),                                   K_Matrix;
 
-	Eigen::MatrixXd K_expand = Eigen::MatrixXd::Zero(3*dimension, 3*dimension); 
-	K_expand << K_Matrix , Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension),
-		Eigen::MatrixXd::Zero(dimension, dimension), K_Matrix, Eigen::MatrixXd::Zero(dimension, dimension),
-		Eigen::MatrixXd::Zero(dimension, dimension), Eigen::MatrixXd::Zero(dimension, dimension), K_Matrix;
 
 	// now we need to multiply it by the k-constant
-
-
-
-
-	//float thickness = 5;
+  // TODO: get material parameters from rigid body material (xml files)
 	float thickness = 0.01;
-	float Y = 200; // young's modulus of steel
+  // Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
+  //  steel - 200
+	float Y = 200;
 	float k_constant = thickness * Y;
 
 	K_expand = k_constant * K_expand;
 
 	K = K_expand;
-
-	return;
 }
 
 // returns the mass matrix
-void RigidBody::getM(Eigen::MatrixXd &M) {
+void RigidBody::getM(Eigen::VectorXf &M) {
 	int dimension = this->verticies.size(); // there are this many verticies
 	dimension = 3 * dimension;
 	// m = density * thickness * area; 
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
 
-	//double thickness = 5;
-	double thickness = 0.01;
-	double mass = 0.785 * 3 * thickness;
-	//mass = 0.1; // over write for now
+  // TODO: get material parameters from rigid body material (xml files)
+	float thickness = 0.01;
+	float mass = 0.785 * 3 * thickness;
 
-	Eigen::MatrixXd mass_matrix = mass * Eigen::MatrixXd::Identity(dimension, dimension);
-
-	M = mass_matrix;
-
-	return;
+	M = mass * Eigen::VectorXf::Ones(dimension);
 }
 
-void RigidBody::diagonalizeK(const Eigen::MatrixXd &K, Eigen::MatrixXd &G,
-										Eigen::MatrixXd &D, Eigen::MatrixXd &Ginv) {
-	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(K);
+void RigidBody::diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
+                              Eigen::VectorXf &D, Eigen::MatrixXf &Ginv) {
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(K);
 	if (eigensolver.info() != Eigen::Success) abort();
 
-	D = eigensolver.eigenvalues().asDiagonal(); // eigenvalues. D
-	G = eigensolver.eigenvectors(); // eigen vectors. G
-	Ginv = eigensolver.eigenvectors().inverse(); // Ginv
-	
-	return;
+  // vector of eigenvalues
+	D = eigensolver.eigenvalues();
+  // eigenvectors corresponding to eigenvalues of D
+	G = eigensolver.eigenvectors();
+	Ginv = eigensolver.eigenvectors().inverse();
 }
 
-void RigidBody::constructW(Eigen::VectorXcd &W_plus, Eigen::VectorXcd &W_minus){
-	double gama = 0.00001; // fluid damping
-	double n_eta = 0.1; // viscolastic damping
+void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
+  // TODO: where should these parameters come from?
+  // fluid damping
+	double gamma = 0.00001;
+  // viscolastic damping
+	double n_eta = 0.1;
 
 	int dimension = verticies.size();
 	dimension = dimension * 3;
 
-	W_plus = Eigen::VectorXcd::Zero(dimension);
-	W_minus = Eigen::VectorXcd::Zero(dimension);
+	W_plus = Eigen::VectorXcf::Zero(dimension);
+	W_minus = Eigen::VectorXcf::Zero(dimension);
 
 	// imaginary numbers lol ... 
 	// puts complex cast every where and hope it works
 
-	// w_i = ( -(gama*lambda_i + n) +/- sqrt ((gamma * lambda_i + n)^2 - 4*lambda_i))/2
+	// w_i = ( -(gamma*lambda_i + n) +/- sqrt ((gamma * lambda_i + n)^2 - 4*lambda_i))/2
 	for (int i = 0; i < dimension; i ++) {
-		double lambda_i = D(i,i);
-		complex<double> p1 = -1 * (gama * lambda_i + n_eta);
-		complex<double> p2 = sqrt( complex<double> (pow(gama * lambda_i + n_eta, 2) - 4 * lambda_i )); 
+		double lambda_i = D(i);
+		complex<float> p1 = -1.0f * (gamma * lambda_i + n_eta);
+		complex<float> p2 = sqrt( complex<float> (pow(gamma * lambda_i + n_eta, 2) - 4 * lambda_i )); 
 		
-		W_plus(i) = complex<double> ((p1 + p2)/2.0);
-		W_minus(i) = complex<double> ((p1 - p2)/2.0);
+		W_plus(i) = complex<float> ((p1 + p2)/2.0f);
+		W_minus(i) = complex<float> ((p1 - p2)/2.0f);
 	}
 }
 
@@ -384,41 +378,39 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	// TODO: only calculate sound if close enough to hear
 
 	// constants w00t
-	double duration = 0.5;
-	double fq = 44100;
-	double dt = M_PI/100.0; // 1/fq;
+	float duration = 0.5;
+	float fq = 44100;
+	float dt = M_PI/100.0; // 1/fq;
 	
 	int dimension = verticies.size();
 
 	// TODO: force/impulse (will be later passed from colissions
-	Eigen::VectorXcd f = Eigen::VectorXcd::Zero(3 * dimension);
+	Eigen::VectorXcf f = Eigen::VectorXcf::Zero(3 * dimension);
 	f(0) = 1; // arbiturarily
 
 	// compute transformed impulse
-	Eigen::VectorXcd g = Ginv * f;
-	// transform M to vector
-	Eigen::VectorXd m = M.diagonal();
+	Eigen::VectorXcf g = Ginv * f;
 	
 	// time of impact / colission
 	//	 We will independently calculate all sound responses so this is always zero?
-	complex<double> t0 = 0;
+	complex<float> t0 = 0;
 	
 	// init constant terms to 0
-	Eigen::VectorXcd c = Eigen::VectorXcd::Zero(3 * dimension); 
+	Eigen::VectorXcf c = Eigen::VectorXcf::Zero(3 * dimension); 
 
 	// update constants
 	// c = c + g./((m .* (w_plus - w_minus)) .* exp(w_plus * t0));
 	for (int i = 0; i < dimension * 3; i++) {
-		c(i) = c(i) +  g(i) / (( m(i) * (W_plus(i) - W_minus(i))) * exp(W_plus(i) * t0));
+		c(i) = c(i) +  g(i) / (( M(i) * (W_plus(i) - W_minus(i))) * exp(W_plus(i) * t0));
 	}
-	Eigen::VectorXcd c_bar = c.conjugate();
+	Eigen::VectorXcf c_bar = c.conjugate();
 	
 	// current time
-	complex<double> t = 0; // has to be complex 
+	complex<float> t = 0; // has to be complex 
 
 	int nmode = dimension * 3;
 	int nsample = fq * duration;
-	Eigen::VectorXf sample = Eigen::VectorXf(nsample);
+	Eigen::VectorXf sample = Eigen::VectorXf::Zero(nsample);
 
 	float max = 0;
 
@@ -445,16 +437,16 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	*************************************************/
 	
 	// vector to store the previous response for each mode
-	Eigen::VectorXcd mode_t_minus_1 = Eigen::VectorXcd::Zero(3 * dimension); 
+	Eigen::VectorXcf mode_t_minus_1 = Eigen::VectorXcf::Zero(3 * dimension);
 	for (int i =0; i < nsample; i++) {
 		t = dt * (i+1);
-		sample(i) = 0.0;
 		
 		for (int j = 0; j < nmode; j++) {
 			// mode velocity
 			//   mode_vel = @(t) c .* w_plus .* exp(w_plus .* t) + c_bar .* w_minus .* exp(w_minus .* t);
-			complex<double> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
+			complex<float> v = c(j) * W_plus(j) * exp ( W_plus(j) * t) + c_bar(j) * W_minus(j) * exp(W_minus(j) * t);
 			
+			// TODO: should this be v * dt?
 			mode_t_minus_1(j) += v;
 
 			// sum of all the modes for this sample
