@@ -378,7 +378,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	// TODO: only calculate sound if close enough to hear
 
 	// constants w00t
-	float duration = 0.5;
+	float duration = 0.1;
 	float fq = soundManager->GetUserCreatedFrequency();
 	complex<float> dt = M_PI/100.0; // 1/fq;
 	
@@ -409,6 +409,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 	complex<float> t = 0; // has to be complex 
 
 	int nmode = dimension * 3;
+	printf("nmode: %d\n", nmode);
 	int nsample = fq * duration;
 	Eigen::VectorXf sample = Eigen::VectorXf::Zero(nsample);
 
