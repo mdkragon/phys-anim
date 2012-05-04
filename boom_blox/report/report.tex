@@ -83,7 +83,7 @@ We first looked at our input data. Our input is an xml file with information on 
     \caption{Simple, example mesh for a cube with partices at each corner.}
   \end{figure}
 
-Given our mass-spring system in the adjacency list, we then have to calcualte the elastic force matrix. We assumed that all the springs in the mass-spring-system have the same k-constant. By Young's Modulus Theorem, this means we can factor the k-constant out when we first calculate the matrix. For each spring, we 
+Given our mass-spring system in the adjacency list, we then have to calcualte the elastic force matrix (we'll call it the k-matrix). We assumed that all the springs in the mass-spring-system have the same k-constant. By Young's Modulus Theorem, this means we can factor the k-constant out when we first calculate the matrix. This K-matrix is a square matrix of size 3*N by 3*N -- N is the number of masses in the system. For the K-matrix, for each spring (from mass i to mass j), we will do +1 on cells  (i,i) and (j,j), and -1 on cells (i,j), and (j,i), this is repeated for 2*N and 3*N. Figure 2 shows a visualization of our K-matrix for the cube. 
 
   \begin{figure}[H]
     \begin{center}
@@ -93,6 +93,8 @@ Given our mass-spring system in the adjacency list, we then have to calcualte th
               black cells are $0$, the gray cells have the value $-k$ and the white
               cells have the value $+2k$.}
   \end{figure}
+
+
 
   \begin{figure}[H]
     \begin{center}$
