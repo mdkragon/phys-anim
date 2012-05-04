@@ -29,6 +29,7 @@ run-time, we apply the force onto our mass-spring system to generate multiple
 signals that sum up to a sound wave. 
 
 \section{Sound Modeling}
+The main equations we implemented are as follows:
 
   % equations
   $$
@@ -75,10 +76,11 @@ signals that sum up to a sound wave.
 
 
 
-\section{Mass Spring System}
-For mass spring system, we are using 
+where I have no idea yet lol
 
 \section{Performance Increases}
+
+We first looked at our input data. Our input is an xml file with information on how to generate a few supported primitives. With these primatives, we generated a mass-spring system based on our guess of how a mesh of the same primative would look like. Figure 1 shows a simple example of a cube primative. We store the data in an adjacency list. 
 
   \begin{figure}[H]
     \begin{center}
@@ -86,6 +88,8 @@ For mass spring system, we are using
     \end{center} 
     \caption{Simple, example mesh for a cube with partices at each corner.}
   \end{figure}
+
+Given our mass-spring system in the adjacency list, we then have to calcualte the elastic force matrix. We assumed that all the springs in the mass-spring-system have the same k-constant. By Young's Modulus Theorem, this means we can factor the k-constant out when we first calculate the matrix. For each spring, we 
 
   \begin{figure}[H]
     \begin{center}
