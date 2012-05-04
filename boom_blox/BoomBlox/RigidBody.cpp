@@ -418,6 +418,15 @@ void RigidBody::initSoundScene() {
 }
 
 void RigidBody::calculateSound(SoundManager *soundManager, Vector3 location, Vector3 impulse) {
+	// threshold for velocity
+	
+	if ( GetVelocityAtPoint(location).length() < 4 ) {
+		return;
+	}
+	
+	//std::cout << GetVelocity() << " magnitude " << GetVelocityAtPoint(location).length() << endl;
+	//return;
+
 	// only calculate sound if it is close enough
 	// something like this? 
 	float dist_fc = (GetTransformation().inverse() * location).length();
