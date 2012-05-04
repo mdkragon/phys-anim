@@ -6,200 +6,60 @@
 \usepackage{subfig}
 \usepackage{float}
 \usepackage{longtable}
-\usepackage{blindtext}
+%\usepackage{blindtext}
 
 \graphicspath{{./fig/}}
 
 \begin{document}
 
 
-\title{MEAM 620 - Robotics\\Project 3 - Visual Odometry}
-\date{April 27, 2012}
-\author{Jordan Brindza}
+\title{Physically Based Sound\\CIS 563}
+\date{May 4, 2012}
+\author{Jiali Sheng and Jordan Brindza}
 \maketitle
   
 
 \section{Introduction}
 
-  For this project I implemented an automous helicopter that can plan and
-  traverse a trajectory through an known environment using a vision based
-  localization. 
-
-  For this phase of the project I used color regions as my main feature. First,
-  the foreground of each image was segmented out (the walls and floor colors
-  were known). Connected regions in the foreground image were found and any
-  regions consisting of pixels of similar color were merged. Then the center of mass
-  (based on pixel densities) for each region was computed. This was done both
-  the left and right stereo images.
-
-  \begin{figure}[H]
-    \begin{center}$
-      \begin{tabular}{cc}
-        \includegraphics[width=0.5\columnwidth]{block_match_left_rgb}
-        &
-        \includegraphics[width=0.5\columnwidth]{block_match_left_block_seg} 
-      \end{tabular}$
-    \end{center}
-    \caption{Example RGB image (left) and segmented regions (right).}
-  \end{figure}
-
-  Correspondence was then found between the left and right image regions by
-  matching similar colors and ensuring that their centroids lie close to their
-  epipolar line. The disparity of the block is computed as the average disparity
-  for the entire color color region that is found using the OpenCV SSD disparity
-  algorithm. If the disparity for the block is not available then the difference
-  between the region centroids for the left and right image is used. Finally, the 
-  true world positions of the blocks are found by matching the block color from 
-  the image with the blocks in the map and the relative transform between the
-  observed positions and the actual positions is computed using a least squares
-  fit to find the pose estimate for the robot in the world. ~\cite{arun}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=0.8\columnwidth]{block_match_stereo_corr}
-    \end{center} 
-    \caption{Example stereo correspondence.}
-  \end{figure}
-
-  The visual pose estimate is computed at 10 Hz and then fused with the
-  quadrotor pose estimate found from integrating the noisy linear and angular
-  velocity estimates provided by the simulator. A low pass, linear filter is
-  used to combine the visual estimates. 
-
-  The only changes that were made to the controller from project 1 were lowering
-  some gains to compensated for the slower, 100 Hz, update rate of the
-  controller and to make the desired trajectory with the yaw pointing in the
-  direction of travel.
 
 \section{Results}
-  
-  The simulated quadrotor was able successfully complete environments 1 and 7
-  (both the original version and the tweaked one, 7.2, with more features on the
-  center columns). Below is a table containing the total time it took to
-  complete the course and the maximum error in position and orientation along
-  the trajectory. There are also plots of the final trajectory of the quadrotor
-  for each environment with a comparison to the ground truth data from the
-  simulator.
-
-  There is data from two trials of environment 1, one trial of the original
-  environment 7 and one of the new environment 7 (indicated as environment
-  7.2).
-
-  A video of the quadrotor completing the environments can be viewed here:
-  \url{http://youtu.be/PAapLIL_a-E}
-
-\begin{center}
-  \begin{tabular}{|c|c|c|c|}
-    \hline
-    Environment & Completion Time [s] & Max Position Error [m] & Max Orientation Error \\
-    \hline
-    1         & $85.40 $ &  $0.5220$ & $1.9745$ \\
-    1         & $85.72 $ &  $0.3895$ & $0.1701$ \\
-    7         & $120.52$ &  $0.9430$ & $0.5883$ \\
-    7.2       & $120.82$ &  $1.2152$ & $1.9514$ \\
-    \hline
-  \end{tabular}
-  \label{tab:myfirsttable}
-\end{center}
 
 
+  % table example
+  %\begin{center}
+  %  \begin{tabular}{|c|c|c|c|}
+  %    \hline
+  %    Environment & Completion Time [s] & Max Position Error [m] & Max Orientation Error \\
+  %    \hline
+  %    1         & $85.40 $ &  $0.5220$ & $1.9745$ \\
+  %    1         & $85.72 $ &  $0.3895$ & $0.1701$ \\
+  %    7         & $120.52$ &  $0.9430$ & $0.5883$ \\
+  %    7.2       & $120.82$ &  $1.2152$ & $1.9514$ \\
+  %    \hline
+  %  \end{tabular}
+  %  \label{tab:myfirsttable}
+  %\end{center}
 
-%  \begin{figure}[H]
-%    \begin{center}$
-%      \begin{tabular}{cc}
-%        \includegraphics[width=0.5\columnwidth]{auto_E_001}
-%        &
-%        \includegraphics[width=0.5\columnwidth]{man_E_001} \\
-%      \end{tabular}$
-%    \end{center}
-%    \caption{Automatic (left) and manual (right) correspondence for stereo pair 1.}
-%  \end{figure}
+  % grouped images example
+  %\begin{figure}[H]
+  %  \begin{center}$
+  %    \begin{tabular}{cc}
+  %      \includegraphics[width=0.5\columnwidth]{block_match_left_rgb}
+  %      &
+  %      \includegraphics[width=0.5\columnwidth]{block_match_left_block_seg} 
+  %    \end{tabular}$
+  %  \end{center}
+  %  \caption{Example RGB image (left) and segmented regions (right).}
+  %\end{figure}
 
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_final_paths}
-    \end{center} 
-    \caption{Final trajectory for environment 1.}
-  \end{figure}
+  % single image example
+  %\begin{figure}[H]
+  %  \begin{center}
+  %    \includegraphics[width=0.8\columnwidth]{block_match_stereo_corr}
+  %  \end{center} 
+  %  \caption{Example stereo correspondence.}
+  %\end{figure}
 
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_pos}
-    \end{center} 
-    \caption{Plot of the quadrotor cartesian position for environment 1.}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_rpy}
-    \end{center} 
-    \caption{Plot of the quadrotor orientation (roll, pitch and yaw) for environment 1.}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_try2_final_paths}
-    \end{center} 
-    \caption{Final trajectory for environment 1 (second run).}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_try2_pos}
-    \end{center} 
-    \caption{Plot of the quadrotor cartesian position for environment 1 (second run).}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env1_try2_rpy}
-    \end{center} 
-    \caption{Plot of the quadrotor orientation (roll, pitch and yaw) for environment 1 (second run).}
-  \end{figure}
-
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_final_paths}
-    \end{center} 
-    \caption{Final trajectory for environment 7.}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_pos}
-    \end{center} 
-    \caption{Plot of the quadrotor cartesian position for environment 7.}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_rpy}
-    \end{center} 
-    \caption{Plot of the quadrotor orientation (roll, pitch and yaw) for environment 7.}
-  \end{figure}
-
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_2_final_paths}
-    \end{center} 
-    \caption{Final trajectory for environment 7.2 (after adding more features to center columns).}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_2_pos}
-    \end{center} 
-    \caption{Plot of the quadrotor cartesian position for environment 7.2 (after adding more features to center columns).}
-  \end{figure}
-
-  \begin{figure}[H]
-    \begin{center}
-      \includegraphics[width=1.0\columnwidth]{env7_2_rpy}
-    \end{center} 
-    \caption{Plot of the quadrotor orientation (roll, pitch and yaw) for environment 7.2 (after adding more features to center columns).}
-  \end{figure}
 
 \bibliography{report} \bibliographystyle{plain}
 
