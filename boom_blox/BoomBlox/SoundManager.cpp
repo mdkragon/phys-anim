@@ -18,6 +18,7 @@ SoundManager::SoundManager(int userCreatedFrequency)
 	/*
         Create a System object and initialize.
     */
+
 	FMOD_RESULT result;
     result = FMOD::System_Create(&system);
     ERRCHECK(result);
@@ -265,4 +266,8 @@ void SoundManager::fileLoader(){
                stream[i] = curr_freq;
        }
        fb.close();
+}
+
+void SoundManager::setUserCreatedFrequency(int freq) {
+	this->m_userCreatedFrequency = freq;
 }

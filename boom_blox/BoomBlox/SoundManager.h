@@ -32,7 +32,10 @@ public:
 	
 	int GetUserCreatedFrequency();
 	
+	void setUserCreatedFrequency(int freq);
+
 	void SoundManager::fileLoader();
+
     float * stream;
 
 private:

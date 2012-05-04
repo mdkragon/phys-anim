@@ -130,6 +130,13 @@ private:
 
 
 protected:
+	// sound constants relating to material
+	float thickness;// = 0.01; // thickness of material
+	float Y;// = 900; // young's modulus
+
+	double gamma; // = 0.00001;
+	double n_eta; //  = 0.1;
+
 	// Sound Generation Variables
 	vector<Vertex *> verticies;
 	Eigen::MatrixXf K; 

@@ -22,6 +22,19 @@ RigidBody::RigidBody() :
 	m_hasInfiniteMass(false),
 	id(0)
 {
+	
+	// set 1: (metal bowl thingie) 0.1, 900, 0.00001, 0.1;
+	// set 2: 0.005, 500, 0.00001, 0.1;
+	// set 3: 5, 20, 0.00001, 0.1;
+	// set 4 (lol): 0.1, 2000, 0.000000000000001, 0.0000000001;
+	// set 5: (foot steps): 0.1, 20, 0.1, 0.1;
+	// set 6: ("doh", don't know how to describe it, muted by water) 0.5, 1, 0.0001, 0.1;
+	
+	// tmp
+	this->thickness = 0.1; 
+	this->Y = 900;
+	this->gamma = 0.00001;
+	this->n_eta = 0.1;
 }
 
 void RigidBody::SetID(int id_)
@@ -297,11 +310,11 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 
 	// now we need to multiply it by the k-constant
 	// TODO: get material parameters from rigid body material (xml files)
-	float thickness = 0.01;
+	//float thickness = 0.01;
 	//float thickness = m_material->thickness;
 	// Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
 	//  steel - 200
-	float Y = 900;
+	//float Y = 900;
 	//float Y = material->youngsModulus;
 	float k_constant = thickness * Y;
 
@@ -319,7 +332,7 @@ void RigidBody::getM(Eigen::VectorXf &M) {
 	// density for steel is 7.85 g/cm^3
 
 	// TODO: get material parameters from rigid body material (xml files)
-	float thickness = 0.01;
+	//float thickness = 0.01;
 	//float thickness = m_material->thickness;
 	float mass = 0.785 * 3 * thickness;
 	//float mass = m_material->pmass;
@@ -342,10 +355,10 @@ void RigidBody::diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
 void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
 	// TODO: where should these parameters come from?
 	// fluid damping
-	double gamma = 0.00001;
+	//double gamma = 0.00001;
 	//double gamma = m_material->fluidDamping;
 	// viscolastic damping
-	double n_eta = 0.1;
+	//double n_eta = 0.1;
 	//double n_eta = m_material->viscoelasticDamping;
 
 	int dimension = verticies.size();
@@ -405,7 +418,28 @@ void RigidBody::initSoundScene() {
 }
 
 void RigidBody::calculateSound(SoundManager *soundManager, Vector3 location, Vector3 impulse) {
-	// TODO: only calculate sound if close enough to hear
+	// only calculate sound if it is close enough
+	// something like this? 
+	float dist_fc = (GetTransformation().inverse() * location).length();
+	if (dist_fc > 100) {
+		return;
+	} else if ( dist_fc > 70) {
+		soundManager->setUserCreatedFrequency(8000);
+	} else if ( dist_fc > 60) {
+		soundManager->setUserCreatedFrequency(10000);
+	} else if ( dist_fc > 50) {
+		soundManager->setUserCreatedFrequency(15000);
+	} else if ( dist_fc > 40) {
+		soundManager->setUserCreatedFrequency(20000);
+	} else if ( dist_fc > 30) {
+		soundManager->setUserCreatedFrequency(30000);
+	} else if ( dist_fc > 20) {
+		soundManager->setUserCreatedFrequency(40000);
+	} else {
+		soundManager->setUserCreatedFrequency(44100);
+	}
+	
+	
 
 	// constants w00t
 	float duration = 0.1;
@@ -414,7 +448,7 @@ void RigidBody::calculateSound(SoundManager *soundManager, Vector3 location, Vec
 	
 	int dimension = verticies.size();
 
-	// TODO: force/impulse (will be later passed from colissions
+	// force/impulse passed from colissions
 	Eigen::VectorXcf f = Eigen::VectorXcf::Zero(3 * dimension);
 	calcForce(&f, location, impulse);
 
