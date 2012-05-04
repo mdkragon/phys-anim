@@ -50,6 +50,14 @@ Material const* RigidBody::GetMaterial() const
 void RigidBody::SetMaterial(Material const* material)
 {
 	m_material = material;
+	
+	// set sound parameters
+	this->thickness = material->thickness;
+	this->Y = material->youngsModulus;
+	this->gamma = material->fluidDamping;
+	this->n_eta = material->viscoelasticDamping;
+
+	initSoundScene();
 }
 
 Vector3 RigidBody::GetNormalLocalInverseInertialTensor() const
@@ -282,6 +290,9 @@ void RigidBody::Render() const
 
 void RigidBody::getK(Eigen::MatrixXf &K){
 	int dimension = this->verticies.size(); // there are this many verticies
+	if (dimension == 0) {
+		return;
+	}
 	Eigen::MatrixXf K_Matrix = Eigen::MatrixXf::Zero(dimension, dimension); // creates matrix
 	const Material *material = GetMaterial();
 
@@ -327,6 +338,10 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 void RigidBody::getM(Eigen::VectorXf &M) {
 	int dimension = this->verticies.size(); // there are this many verticies
 	dimension = 3 * dimension;
+	if (dimension == 0) {
+		return;
+	}
+	
 	// m = density * thickness * area; 
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
@@ -342,6 +357,9 @@ void RigidBody::getM(Eigen::VectorXf &M) {
 
 void RigidBody::diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
                               Eigen::VectorXf &D, Eigen::MatrixXf &Ginv) {
+	if (this->verticies.size() == 0) {
+		return;
+	}
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(K);
 	if (eigensolver.info() != Eigen::Success) abort();
 
@@ -363,7 +381,9 @@ void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
 
 	int dimension = verticies.size();
 	dimension = dimension * 3;
-
+	if (dimension == 0) {
+		return;
+	}
 	W_plus = Eigen::VectorXcf::Zero(dimension);
 	W_minus = Eigen::VectorXcf::Zero(dimension);
 
