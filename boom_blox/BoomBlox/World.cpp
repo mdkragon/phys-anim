@@ -407,14 +407,16 @@ void World::ResolveIntersection(Intersection &i, float epsilon, bool immediate)
 		// sticking collision; j is acceptable
 	
 		// play sound
-		calcSound(a, b);
+		// pass in local coordinates
+		calcSound(a, b, i.contactPointA, i.contactPointB, j);
 	} else {
 		// jn = -(epsilon + 1) * ureln / (transpose(N) * K_T * (N - mu * T));		
 		float jn = -(epsilon + 1) * ureln / (N.dotProduct(KT * (N - mu*T)));
 		j = jn * N - mu * jn * T;	
 
 		// play sound
-		calcSound(a, b);
+		// pass in local coordinate
+		calcSound(a, b, i.contactPointA, i.contactPointB, j);
 	}
 
 	/*
@@ -573,18 +575,18 @@ void World::SetUseSweepAndPrune(bool useSweepAndPrune) {
 	m_useSweepAndPrune = useSweepAndPrune;
 }
 
-void World::calcSound(RigidBody &a, RigidBody &b) {
+void World::calcSound(RigidBody &a, RigidBody &b, Vector3 locA, Vector3 locB, Vector3 impulse) {
 	
 	// attempt to case the rigid body as ground
 	//   if g is NULL then the case was unsuccessful and it is not ground
 	Ground * g; 
 	g = dynamic_cast<Ground *>(&a); 
 	if (g == NULL) {
-		a.calculateSound(&Sound_Manager);
+		a.calculateSound(&Sound_Manager, locA, impulse);
 	} 
 	g = dynamic_cast<Ground *> (&b);
 	if (g == NULL) {
-		b.calculateSound(&Sound_Manager);
+		b.calculateSound(&Sound_Manager, locB, -1 * impulse);
 	}
 }
 

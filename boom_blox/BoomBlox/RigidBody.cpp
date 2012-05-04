@@ -300,6 +300,7 @@ void RigidBody::getK(Eigen::MatrixXf &K){
   // Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
   //  steel - 200
 	float Y = 200;
+	Y = 900;
 	float k_constant = thickness * Y;
 
 	K_expand = k_constant * K_expand;
@@ -361,6 +362,29 @@ void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
 	}
 }
 
+void RigidBody::calcForce(Eigen::VectorXcf * force, Vector3 location, Vector3 impulse) {
+	// get closest vertex, and get force?
+	int dimension = verticies.size();
+	float min_dist = (verticies.at(0)->getLocation() - location).length();
+	float cur_dist = min_dist;
+	int min_vertex = 0;
+	for (int i = 0; i < dimension; i ++) {
+		// if length is smaller update min_vertex
+		if ( (cur_dist = (verticies.at(i) ->getLocation() - location).length()) < min_dist) {
+			min_dist = cur_dist;
+			min_vertex = i;
+		}
+	}
+
+	// object space!!
+	impulse = GetTransformation().inverse() * impulse;
+
+	// after finding the vertex 
+	// let's calc force matrix
+	(*force)(min_vertex) = impulse[0];
+	(*force)(dimension + min_vertex) = impulse[1];
+	(*force)(2*dimension + min_vertex) = impulse[2];
+}
 
 void RigidBody::initSoundScene() {
 	// call meshify
@@ -374,7 +398,7 @@ void RigidBody::initSoundScene() {
 	constructW(W_plus, W_minus);
 }
 
-void RigidBody::calculateSound(SoundManager *soundManager) {
+void RigidBody::calculateSound(SoundManager *soundManager, Vector3 location, Vector3 impulse) {
 	// TODO: only calculate sound if close enough to hear
 
 	// constants w00t
@@ -386,7 +410,7 @@ void RigidBody::calculateSound(SoundManager *soundManager) {
 
 	// TODO: force/impulse (will be later passed from colissions
 	Eigen::VectorXcf f = Eigen::VectorXcf::Zero(3 * dimension);
-	f(0) = 1; // arbiturarily
+	calcForce(&f, location, impulse);
 
 	// compute transformed impulse
 	Eigen::VectorXcf g = Ginv * f;

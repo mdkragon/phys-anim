@@ -72,7 +72,7 @@ public:
 
 	// queues an impulse to the body, which will change its velocity.
 	// "impulse" is the delta-momentum vector, in world-space.
-	// "point" is the world-space point at which the impulse is applied.
+	// "point" is the world-space point at which the is applied.
 	// Queueing impulses frees us from having to worry about collision processing orders,
 	// at least in one respect.
 	void QueueImpulse(Vector3 const& impulse, Vector3 const& point);
@@ -148,12 +148,15 @@ protected:
 	void getM(Eigen::VectorXf &M);
 	void constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus);
 
+	void calcForce(Eigen::VectorXcf * force, Vector3 location, Vector3 impulse);
+
 	void initSoundScene();
 
 public: 
 	
 	SoundManager * Sound_Manager;
-	void calculateSound(SoundManager *soundManager);
+	// calculated Sound, location is local coordinates
+	void calculateSound(SoundManager *soundManager, Vector3 location, Vector3 impulse);
 };
 
 #endif

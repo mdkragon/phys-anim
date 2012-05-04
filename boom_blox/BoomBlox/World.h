@@ -101,7 +101,7 @@ private:
 
 	// sound stuff:
 
-	static void calcSound(RigidBody &a, RigidBody &b); 
+	static void calcSound(RigidBody &a, RigidBody &b, Vector3 locA, Vector3 locB, Vector3 impulse); 
 
 };
 
