@@ -55,6 +55,7 @@ The main equations we implemented are as follows:
   $$
 
   $M$ and $D$ are both diagonal martices resulting in a set of $3n$ independent differential equations for each $z_i$. 
+These equations are derivid from force calculations of the system.
 
   $$
     % ode solution for damped oscillator 
@@ -63,7 +64,7 @@ The main equations we implemented are as follows:
       w_{i}^{\pm} & = & \frac{-(\gamma \lambda_{i} + \eta) \pm \sqrt{(\gamma \lambda_{i} + \eta)^2 - 4 \lambda_{i}}}{2}
     \end{array}
   $$
-
+where lambda is the eigen values of the K-matrix. And gamma and eta are enviorment and material damping constants. 
   $$
     % derivative of z_i
     v_{i} = \frac{dz_{i}}{dt} = c_{i} w_{i}^{+} e^{w_{i}^{+}t} + \bar{c}_{i} w_{i}^{-} e^{w_{i}^{-}t}  
@@ -75,10 +76,7 @@ The main equations we implemented are as follows:
   $$
 
 
-
-where I have no idea yet lol
-
-\section{Performance Increases}
+\section{Performance}
 
 We first looked at our input data. Our input is an xml file with information on how to generate a few supported primitives. With these primatives, we generated a mass-spring system based on our guess of how a mesh of the same primative would look like. Figure 1 shows a simple example of a cube primative. We store the data in an adjacency list. 
 
@@ -100,7 +98,7 @@ Given our mass-spring system in the adjacency list, we then have to calcualte th
               cells have the value $+2k$.}
   \end{figure}
 
-
+Everytime a collision is detected, our calculations will take the impulse force at the point of contact, and simulate the force on the mass-spring system. The result is a series of signals produced by each spring in the system. To obtain the sound sample, we sum over the different signals and output it as a buffer array into the FMOD sound package. Based on sampling ratios, and theories of perceptions, we can adjust the sampling rate and cut out inaudiable signals to cut down computing time. Figure three shows graphs of the signals produced by striking the cube and sampling at different rates. 
 
   \begin{figure}[H]
     \begin{center}$
