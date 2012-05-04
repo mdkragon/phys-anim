@@ -12,8 +12,7 @@
 Box::Box(Vector3 const& halfSize) : m_halfSize(halfSize)
 {
 	m_radius = halfSize.length();
-  initSoundScene();
-//	calculateSound();
+	//initSoundScene();
 }
 
 Box* Box::Clone() const

@@ -5,7 +5,7 @@
 
 Sphere::Sphere(float radius) : m_radius(radius)
 {
-	initSoundScene();
+	//initSoundScene();
 }
 
 Sphere* Sphere::Clone() const
