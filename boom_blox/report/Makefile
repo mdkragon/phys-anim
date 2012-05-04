@@ -4,7 +4,7 @@ NAME= report
 
 all:
 	latex $(NAME).tex
-	bibtex $(NAME)
+	#bibtex $(NAME)
 	latex $(NAME).tex
 	latex $(NAME).tex
 	dvips $(NAME).dvi
