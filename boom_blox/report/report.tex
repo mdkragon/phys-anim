@@ -24,6 +24,49 @@
 \section{Sound Modeling}
 
   % equations
+  $$
+    % system model ODE
+    M\frac{d^2 r}{dt^2} + (\gamma M + \eta K) \frac{dr}{dt} + Kr = f
+  $$
+
+  $$
+    % diagonalized K
+    K = GDG^{-1}
+  $$
+
+  $$
+    % substituting for K
+    \begin{array}{ccc}
+      M\frac{d^2 r}{dt^2} + (\gamma M + \eta GDG^{-1}) \frac{dr}{dt} + GDG^{-1}r & = & f \\[11pt]
+      G^{-1} M\frac{d^2 r}{dt^2} + (\gamma G^{-1} M + \eta DG^{-1}) \frac{dr}{dt} + DG^{-1}r & = & G^{-1} f \\[11pt]
+      \textrm{$M$ is diagonal so } G^{-1}M = MG^{-1} & & \\[11pt]
+      M G^{-1} \frac{d^2 r}{dt^2} + (\gamma M + \eta D)G^{-1} \frac{dr}{dt} + DG^{-1}r & = & G^{-1} f \\[11pt]
+      \textrm{Using change of variables let } z = G^{-1} r & & \\[11pt]
+      M \frac{d^2 z}{dt^2} + (\gamma M + \eta D) \frac{dz}{dt} + Dz & = & G^{-1} f \\[11pt]
+    \end{array}
+  $$
+
+  $M$ and $D$ are both diagonal martices resulting in a set of $3n$ independent differential equations for each $z_i$. 
+
+  $$
+    % ode solution for damped oscillator 
+    \begin{array}{ccc}
+      z_{i}(t) & = & c_{i} e^{w_{i}^{+}t} + \bar{c}_{i} e^{w_{i}^{-}t} \\ 
+      w_{i}^{\pm} & = & \frac{-(\gamma \lambda_{i} + \eta) \pm \sqrt{(\gamma \lambda_{i} + \eta)^2 - 4 \lambda_{i}}}{2}
+    \end{array}
+  $$
+
+  $$
+    % derivative of z_i
+    v_{i} = \frac{dz_{i}}{dt} = c_{i} w_{i}^{+} e^{w_{i}^{+}t} + \bar{c}_{i} w_{i}^{-} e^{w_{i}^{-}t}  
+  $$
+
+  $$
+    % constants update from impulse
+    c_{i} \gets c_{i} + \frac{g_{i}}{m_{i} (w_{i}^{+} - w_{i}^{-}) e^{w_{i}^{+} t_{0}}}
+  $$
+
+
 
 
 \section{Performance Increases}
