@@ -61,7 +61,29 @@ public:
 			element.Attribute("cg", &cg);
 			element.Attribute("cb", &cb);
 
-			m_curMaterial = new Material(float(density), float(friction), float(restitution), Vector3(float(cr), float(cg), float(cb)));
+			
+
+
+			// populate sound parameters
+			double thickness;
+			double youngsModulus;
+			double fluidDamping;
+			double viscoelasticDamping;
+			
+			element.Attribute("thickness", &thickness);
+			element.Attribute("youngsModulus", &youngsModulus);
+			element.Attribute("fluidDamping", &fluidDamping);
+			element.Attribute("viscoelasticDamping", &viscoelasticDamping);
+			
+			// if any values are NULL then set them to the default
+			thickness = thickness == NULL ? 0.1 : thickness;
+			youngsModulus = youngsModulus == NULL ? 900 : youngsModulus;
+			fluidDamping = fluidDamping == NULL ? 0.00001 : fluidDamping;
+			viscoelasticDamping = viscoelasticDamping == NULL ? 0.1 : viscoelasticDamping;
+			
+			m_curMaterial = new Material(float(density), float(friction), float(restitution), Vector3(float(cr), float(cg), float(cb)),
+											float(thickness), float(youngsModulus), float(fluidDamping), float(viscoelasticDamping));
+			
 			m_materials[name] = m_curMaterial;
 
 			return true;

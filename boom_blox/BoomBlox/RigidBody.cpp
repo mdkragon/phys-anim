@@ -270,7 +270,8 @@ void RigidBody::Render() const
 void RigidBody::getK(Eigen::MatrixXf &K){
 	int dimension = this->verticies.size(); // there are this many verticies
 	Eigen::MatrixXf K_Matrix = Eigen::MatrixXf::Zero(dimension, dimension); // creates matrix
-	
+	const Material *material = GetMaterial();
+
 	for (int i = 0; i < dimension; i ++) {
 		vector<Vertex *> neighbors = this->verticies.at(i)->getNeighbor();
 		int a = this->verticies.at(i)->getId(); // a is first index
@@ -295,12 +296,13 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 
 
 	// now we need to multiply it by the k-constant
-  // TODO: get material parameters from rigid body material (xml files)
+	// TODO: get material parameters from rigid body material (xml files)
 	float thickness = 0.01;
-  // Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
-  //  steel - 200
-	float Y = 200;
-	Y = 900;
+	//float thickness = m_material->thickness;
+	// Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
+	//  steel - 200
+	float Y = 900;
+	//float Y = material->youngsModulus;
 	float k_constant = thickness * Y;
 
 	K_expand = k_constant * K_expand;
@@ -316,9 +318,11 @@ void RigidBody::getM(Eigen::VectorXf &M) {
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
 
-  // TODO: get material parameters from rigid body material (xml files)
+	// TODO: get material parameters from rigid body material (xml files)
 	float thickness = 0.01;
+	//float thickness = m_material->thickness;
 	float mass = 0.785 * 3 * thickness;
+	//float mass = m_material->pmass;
 
 	M = mass * Eigen::VectorXf::Ones(dimension);
 }
@@ -328,19 +332,21 @@ void RigidBody::diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(K);
 	if (eigensolver.info() != Eigen::Success) abort();
 
-  // vector of eigenvalues
+	// vector of eigenvalues
 	D = eigensolver.eigenvalues();
-  // eigenvectors corresponding to eigenvalues of D
+	// eigenvectors corresponding to eigenvalues of D
 	G = eigensolver.eigenvectors();
 	Ginv = eigensolver.eigenvectors().inverse();
 }
 
 void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
-  // TODO: where should these parameters come from?
-  // fluid damping
+	// TODO: where should these parameters come from?
+	// fluid damping
 	double gamma = 0.00001;
-  // viscolastic damping
+	//double gamma = m_material->fluidDamping;
+	// viscolastic damping
 	double n_eta = 0.1;
+	//double n_eta = m_material->viscoelasticDamping;
 
 	int dimension = verticies.size();
 	dimension = dimension * 3;
@@ -433,7 +439,7 @@ void RigidBody::calculateSound(SoundManager *soundManager, Vector3 location, Vec
 	complex<float> t = 0; // has to be complex 
 
 	int nmode = dimension * 3;
-	printf("nmode: %d\n", nmode);
+	//printf("nmode: %d\n", nmode);
 	int nsample = fq * duration;
 	Eigen::VectorXf sample = Eigen::VectorXf::Zero(nsample);
 
