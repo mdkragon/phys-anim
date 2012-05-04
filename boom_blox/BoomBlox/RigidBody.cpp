@@ -289,7 +289,7 @@ void RigidBody::Render() const
 
 
 void RigidBody::getK(Eigen::MatrixXf &K){
-	int dimension = this->verticies.size(); // there are this many verticies
+	int dimension = this->verticies.size();
 	if (dimension == 0) {
 		return;
 	}
@@ -324,9 +324,6 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 	//float thickness = 0.01;
 	//float thickness = m_material->thickness;
 	// Young's modulus (http://en.wikipedia.org/wiki/Young%27s_modulus)
-	//  steel - 200
-	//float Y = 900;
-	//float Y = material->youngsModulus;
 	float k_constant = thickness * Y;
 
 	K_expand = k_constant * K_expand;
@@ -336,7 +333,7 @@ void RigidBody::getK(Eigen::MatrixXf &K){
 
 // returns the mass matrix
 void RigidBody::getM(Eigen::VectorXf &M) {
-	int dimension = this->verticies.size(); // there are this many verticies
+	int dimension = this->verticies.size();
 	dimension = 3 * dimension;
 	if (dimension == 0) {
 		return;
@@ -346,11 +343,8 @@ void RigidBody::getM(Eigen::VectorXf &M) {
 	// for now assume homogenous object
 	// density for steel is 7.85 g/cm^3
 
-	// TODO: get material parameters from rigid body material (xml files)
-	//float thickness = 0.01;
-	//float thickness = m_material->thickness;
+	// TODO: use material density in mass calculation?
 	float mass = 0.785 * 3 * thickness;
-	//float mass = m_material->pmass;
 
 	M = mass * Eigen::VectorXf::Ones(dimension);
 }
@@ -371,14 +365,6 @@ void RigidBody::diagonalizeK(const Eigen::MatrixXf &K, Eigen::MatrixXf &G,
 }
 
 void RigidBody::constructW(Eigen::VectorXcf &W_plus, Eigen::VectorXcf &W_minus){
-	// TODO: where should these parameters come from?
-	// fluid damping
-	//double gamma = 0.00001;
-	//double gamma = m_material->fluidDamping;
-	// viscolastic damping
-	//double n_eta = 0.1;
-	//double n_eta = m_material->viscoelasticDamping;
-
 	int dimension = verticies.size();
 	dimension = dimension * 3;
 	if (dimension == 0) {
