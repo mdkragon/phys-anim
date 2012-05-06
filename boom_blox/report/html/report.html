@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>Physically Based Sound</title>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+    <meta name="generator" content="HAPedit 3.1">
+    <style type="text/css">
+      html,body{margin:0;padding:0}
+      body{font: 90% arial,sans-serif;text-align:center}
+      p{margin:0 10px 10px}
+      div#header
+        h1{height:80px;line-height:80px;margin:0;padding-left:10px;background:
+          #EEE;color: #79B30B}
+      div#container{text-align:left}
+      div#content p{line-height:1.4}
+      div#navigation{background:#B9CAFF}
+      div#extra{background:#FF8539}
+      div#footer{background: #333;color: #FFF}
+      div#footer p{margin:0;padding:5px 10px}
+
+      div#container{width:700px;margin:0 auto}
+      div#navigation{float:right;width:100%}
+      div#extra{float:left;width:100%}
+      div#footer{clear:both;width:100%}
+    </style>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="header">
+        <h1>Physicially Based Sound</h1>
+      </div>
+
+      <div id="wrapper">
+        <div id="content">
+          <p>
+            <br>
+            <strong>Introduction:</strong> 
+            <br> <br>
+
+            For this project, we plan to physically generate sound for rigid
+            body collisions. To simulate sound, we followed the implementation
+            of the paper "Interactive Sound Synthesis for Large Scale
+            Environments" [3].  First, we reconstructed the objects in the scene
+            as mass spring systems, and calculated the Gain matrix , and other
+            coefficients as according to the paper. During run-time, we apply
+            the force onto our mass-spring system to generate multiple signals
+            that sum up to a sound wave.  column long long column very long
+          </p> 
+
+          <p>
+            <br>
+            <strong>Sound Modeling:</strong> 
+            <br> <br>
+
+            We first looked at our input data. Our input is an XML file with information
+            on how to generate a few supported primitives. With these primitives, we
+            generated a mass-spring system based on our guess of how a mesh of the same
+            primitive would look like. Figure 1 shows a simple example of a cube
+            primitive. We store the data in an adjacency list. 
+          </p> 
+
+          <!-- cube mesh image -->
+          <center>
+            <img src="./fig/sound_syn_cube_mesh_mesh_plot.jpg" alt="some_text" width="100%"/> 
+          <br>
+            <p style="width:70%;font:80% Arial">
+              Simple, example mesh for a cube with particles at each corner.
+            </p>
+          </center>
+          <br>
+
+          <p>
+            Given our mass-spring system in the adjacency list, we then have to
+            calculate the elastic force matrix (we'll call it the <i>K</i>-matrix). We
+            assumed that all the springs in the mass spring system have the same
+            <i>k</i>-constant. By Young's Modulus Theorem, this means we can factor the
+            <i>k</i>-constant out when we first calculate the matrix. This <i>K</i>-matrix is
+            a square matrix of size <i>3n</i> by <i>3n</i> -- <i>n</i> is the number of particles in
+            the system. For the <i>K</i>-matrix, for each spring (from mass <i>i</i> to mass
+            <i>j</i>), we will do +1 on cells  (<i>i</i>,<i>i</i>) and (<i>j</i>,<i>j</i>), and <i>-1</i> on cells (<i>i</i>,<i>j</i>),
+            and (<i>j</i>,<i>i</i>), this is repeated for <i>2n</i> and <i>3n</i>.  Figure <i>2</i> shows a
+            visualization of our <i>K</i>-matrix for the cube. 
+          </p> 
+
+          <!-- k matrix image -->
+          <center>
+            <img src="./fig/sound_syn_cube_mesh_Kmatrix.jpg" alt="some_text"/>
+            <br>
+            <p style="width:70%;font:80% Arial">
+              Visualization of the full <i>K</i> matrix for the simple cube mesh. The
+              black cells are 0, the gray cells have the value <i>-k</i> and the white
+              cells have the value <i>+2k</i>.
+            </p>
+          </center>
+
+          <p>
+            We then setup the equations of motion for the particle system as described in
+            the paper. We assume that the displacement of the particles is small in order
+            to use a linear approximation of the second order system:
+          </p> 
+
+          <!-- ode eq -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_ode.png" alt="some_text" width="50%"/> 
+          </center>
+          <br>
+
+          <p>
+            Here <i>M</i> represents the diagonal matrix of particle masses, <i>K</i> is the force
+            matrix described above and <i>r</i> is the particles displacement. &gamma; and
+            &eta; are free parameters representing the damping coefficients of the
+            mass-spring system. In order to solve the equation we diagonalize <i>K</i>
+            (utilizing the Eigen C++ library [1]):
+          </p>
+
+          <!-- diagonalized k -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_diagonalized_K.png" alt="some_text" width="16%"/>
+          </center>
+          <br>
+
+          <p>
+            and substituting for <i>K</i> in the original equation we get:
+          </p>
+
+          <!-- simplification of ode -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_simplify_ode.png" alt="some_text" width="70%"/> 
+          </center>
+          <br>
+
+
+          <p>
+            Since <i>M</i> and <i>D</i> are diagonal matrices we end up with a set of <i>3n</i> linearly
+            independent equations in <i>z<sub>i</sub></i>, with each <i>z<sub>i</sub></i> corresponding to the modes of
+            the sound. The solution for each <i>z<sub>i</sub></i> is then just the solution for a damped
+            oscillator:
+          </p>
+
+          <!-- ode solution -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_ode_solution.png" alt="some_text"
+            width="40%"/> 
+          </center>
+          <br>
+
+          <p>
+            where &lambda; is the <i>i</i>th eigenvalue of the <i>K</i>-matrix. The constants
+            <i>c<sub>i</sub></i> are initialized to zero and updated for a given collision impulse:
+          </p>
+
+          <!-- constants update eq -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_constants_update.png" alt="some_text" width="35%"/> 
+          </center>
+          <br>
+
+          <p>
+            The final response for each mode produced by the object is computed
+            using the Euler's equation and the velocity of the modes:
+          </p>
+
+          <!-- mode vel -->
+          <br>
+          <center>
+            <img src="./fig/sound_syn_mode_velocity.png" alt="some_text" width="40%"/> 
+          </center>
+          <br>
+
+          <p>
+            Finally, the sound produced by the object is the summation of each
+            individual mode which is played using the FMOD sound libraries [2].
+            Figure 3 shows graphs of the signals produced by striking the cube
+            and sampling at different rates. 
+          </p>
+
+
+          <!-- mode graphs -->
+          <table border="0">
+            <tr>
+              <td> <img src="./fig/sound_syn_cube_mode_resp_44100hz.jpg"
+                alt="some_text" width="90%"/> 
+              <td> <img src="./fig/sound_syn_cube_mode_resp_8000hz.jpg"
+                alt="some_text" width="90%"/> 
+            </tr>
+            <tr>
+              <td> <img src="./fig/sound_syn_cube_sound_sample_44100hz.jpg"
+                alt="some_text" width="90%"/> 
+              <td> <img src="./fig/sound_syn_cube_sound_sample_8000hz.jpg"
+                alt="some_text" width="90%"/> 
+            </tr>
+          </table>
+          <br>
+          <center>
+            <p style="width:70%;font:80% Arial">
+              Plots of synthesized sound for a unit impulse on one of the cube
+              vertices. The top row shows the individual mode responses (left was created
+              at 44.1 kHz and the right at 8 kHz). The bottom row is the final sound
+              sample of the summed mode responses (the left was sampled at 44.1
+              kHz and the right at 8 kHz).
+            </p>
+          </center>
+
+
+          <!-- videos -->
+
+          <br> <br>
+          <strong>Results:</strong> 
+          <br> <br>
+
+          <p>
+            <center> <strong>Angry Spheres:</strong> </center>
+          </p>
+
+          <center>
+            <iframe width="420" height="315" 
+              src="http://www.youtube.com/embed/Atp7BsU7-xQ" frameborder="0" 
+              allowfullscreen>
+            </iframe>
+          </center>
+
+          <br>
+          <p>
+            <center> <strong>Project Summary:</strong> </center>
+          </p>
+
+          <center>
+            <iframe width="420" height="315"
+              src="http://www.youtube.com/embed/_wkh72SePL4" frameborder="0"
+              allowfullscreen>
+            </iframe>
+          </center>
+
+          <br>
+          <p>
+            <center> <strong>Cube Example:</strong> </center>
+          </p>
+
+          <center>
+            <iframe width="420" height="315"
+              src="http://www.youtube.com/embed/Uytb0JLn52Q" frameborder="0"
+              allowfullscreen></iframe>
+          </center>
+
+
+
+          <br> <br> <br>
+
+        </div>
+      </div>
+
+      <div id="navigation">
+        <strong>Acknowledgements:</strong> 
+
+        <p>
+          We would like to thank Joe Kider and Tiantian Liu for their help and advise.
+          <br>
+          Special thanks to Tiju Thomas for allowing us to use his Angry Spheres project.
+        </p>
+      </div>
+
+
+      <div id="extra">
+        <p>
+        [1] <strong> Eigen matrix and linear algebra library, 2012. <a href="http://eigen.tuxfamily.org/">http://eigen.tuxfamily.org/</a>.</strong>
+          <br>
+          [2] <strong> Fmod audio library, 2012. <a href="http://www.fmod.org/">http://www.fmod.org/</a>.</strong>
+          <br>
+          [3] <strong> Nikunj Raghuvanshi and Ming C. Lin. Physically based
+                        sound synthesis for large-scale virtual environ- ments. IEEE Comput.
+                        Graph. Appl., 27(1):14-18, January 2007. </strong>
+
+
+        </p>
+      </div>
+
+      <div id="footer"><center><p>Jordan Brindza & Jiali Sheng</p></center></div>
+    </div>
+  </body>
+</html>
