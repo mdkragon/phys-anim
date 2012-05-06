@@ -68,7 +68,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../OgreMath;../CppUnitLite;../tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;.;../OgreMath;../FMOD;../CppUnitLite;../tinyxml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -83,6 +83,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>../GL;../FMOD;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmodex_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -97,6 +99,7 @@
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="Tests.cpp" />
+    <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldLoader.cpp" />
   </ItemGroup>
@@ -111,6 +114,7 @@
     <ClInclude Include="SoundManager.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Tests.h" />
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldLoader.h" />
   </ItemGroup>
